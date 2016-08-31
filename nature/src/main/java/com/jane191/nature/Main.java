@@ -19,7 +19,7 @@ public class Main {
 			String token2 = token.nextToken();
 			System.out.println(token2);
 			List<List<AnalysisOutput>> result = aah.morphAnalayzer(token2);
-			System.out.println("형태소 분석 : " +result+ result.get(0).get(0).getScore());
+			System.out.println("형태소 분석 : " +result);
 			
 			List<ArrayList<String>> result2 = new ArrayList<ArrayList<String>>();
 			List<ArrayList<String>> result3 = new ArrayList<ArrayList<String>>();
@@ -55,10 +55,7 @@ public class Main {
 		List<AnalysisOutput> temp = anal.get(index);
 		if(anal.get(index).size() > 1) {
 			for (int i=0 ; i<temp.size(); i++) {
-				/*의존명사 처리 파트*/
-				//if(anal.get(index).get(i).getPatn()==1 && anal.get(index).get(i).getStem().length()==1) {
-				//	continue;
-				//}
+				
 				if(anal.get(index).get(i).getPatn()==12 && anal.get(index).get(i+1).getPatn()==2) {
 					int check= anal.get(index+1).get(0).getPatn();
 					if(check==11 || check==3 || check==5 || check ==13 || check==15) {
@@ -83,20 +80,31 @@ public class Main {
 	private static void checking(List<List<AnalysisOutput>> anal, List<ArrayList<String>> result) throws MorphException {
 		for(int i=0; i<anal.size(); i++) {
 			for(int j=0; j<anal.get(i).size(); j++) {
-				//부사 삭제를 위한 if문
-				if(anal.get(i).get(j).getPos()==PatternConstants.POS_AID) continue;
 				if(anal.get(i).get(j).getScore()>30) {
 					ArrayList<String> temp = new ArrayList<String>();
 					temp.add(0, anal.get(i).get(j).getStem());
 					temp.add(1, String.valueOf(anal.get(i).get(j).getPos()));
 					result.add(temp);
 				}
+				//부사 삭제를 위한 if문
+				if(anal.get(i).get(j).getPos()==PatternConstants.POS_AID) {
+					/* 일반부사만 남기고 처리하기 위해서
+					 if(anal.get(i).get(j).getPosType()!='일반부사') continue;
+					 else {
+					 	ArrayList<String> temp = new ArrayList<String>();
+					 	temp.add(0, anal.get(i).get(j).getStem());
+					 	temp.add(1, String.valueOf(anal.get(i).get(j).getPos()+"/"
+					 		+anal.get(i).get(j).getPosType()));
+					 	result.add(temp);
+					 	}
+					 */
+					result.remove(result.size()-1);
+				}
+				
 			}
 		}
 	}
-	private static void plusTerm(int a, int b) {
-		int c=a+b;
-	}
+	
 }
 	
 
