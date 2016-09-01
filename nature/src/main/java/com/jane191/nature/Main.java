@@ -10,10 +10,11 @@ import org.apache.lucene.analysis.ko.morph.PatternConstants;
 
 public class Main {
 	public static void main(String[] args) throws MorphException {
+		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
 		String input2 = "그러므로 해외 경험, 외국어 실력에만 한정된 것이 아닌 '다양한 상황적 사고 및 행동방식'은 비단 글로벌 마인드에만 적용되는 것이 아닌 삶 전체에 있어 가장 중요한 가치라 생각합니다.";
 				
-		String input1 = "그는 착한 착하다 착하게.";
+		String input1 = "그는 착한, 착하'다 착하게.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
 			String token2 = token.nextToken();
@@ -31,6 +32,10 @@ public class Main {
 			System.out.println("불용어 처리   : "+result2);
 			System.out.println("불용어 처리   : "+result3);
 			}
+			
+		//String token = "'사람";
+		//System.out.println(ArirangAnalyzerHandler.markRemove2(token, "'"));
+		
 	}
 	
 	/* 결과 입력 메소드 */
