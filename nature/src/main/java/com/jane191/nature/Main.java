@@ -14,18 +14,19 @@ public class Main {
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
 		String input2 = "그러므로 해외 경험, 외국어 실력에만 한정된 것이 아닌 '다양한 상황적 사고 및 행동방식'은 비단 글로벌 마인드에만 적용되는 것이 아닌 삶 전체에 있어 가장 중요한 가치라 생각합니다.";
 				
-		String input1 = "그는 착한, 착하'다 착하게.";
-		StringTokenizer token = new StringTokenizer(input2,".");
+		String input1 = "나는 그림을 연습하였다.";
+		StringTokenizer token = new StringTokenizer(input1,".");
 		while(token.hasMoreTokens()) {
 			String token2 = token.nextToken();
 			System.out.println(token2);
 			List<List<AnalysisOutput>> result = aah.morphAnalayzer(token2);
+			
 			System.out.println("형태소 분석 : " +result);
 			
 			List<ArrayList<String>> result2 = new ArrayList<ArrayList<String>>();
 			List<ArrayList<String>> result3 = new ArrayList<ArrayList<String>>();
 			checking(result, result3);
-			 //불용어 처리 - 어간 문자열과 어간 속성만 뽑아서 따로 저장 
+			//불용어 처리 - 어간 문자열과 어간 속성만 뽑아서 따로 저장 
 			for (int i=0; i < result.size() ; i++) {
 				postProcess(result, i, result2);
 				}
@@ -60,7 +61,8 @@ public class Main {
 		List<AnalysisOutput> temp = anal.get(index);
 		if(anal.get(index).size() > 1) {
 			for (int i=0 ; i<temp.size(); i++) {
-				
+				//그림을 -> 그림+을  - 그리+ㅁ+을 로 나오는 경우 다음 토큰의 형태값에 따라 결과 하나 선택 파트.
+				//부사를 일단 처리하고 체크해야할 듯, 11,3,5,13,15의 경우 서술어 파트에 해당될 가능성이 크므로 NJ형태를 출력함.
 				if(anal.get(index).get(i).getPatn()==12 && anal.get(index).get(i+1).getPatn()==2) {
 					int check= anal.get(index+1).get(0).getPatn();
 					if(check==11 || check==3 || check==5 || check ==13 || check==15) {
