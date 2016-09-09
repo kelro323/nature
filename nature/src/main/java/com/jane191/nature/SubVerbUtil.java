@@ -24,8 +24,10 @@ public class SubVerbUtil {
 				String check = former.get(0).getSource()
 						.substring(former.get(0).getStem().length());
 				if(target.get(i).getStem().equals("보다")) {
-					if(check.equals("어")||check.equals("고")||check.equals("다")||check.equals("다가")) {
-						target.get(i).setPatn(50); // PosType 변경예정 라이브러리 업데이트 이후
+					if(check.equals("어")){
+						target.get(i).setPatn(50); // PosType 변경예정 라이브러리 업데이트 이후	
+					} else if(check.equals("고")||check.equals("다")||check.equals("다가")) {
+						
 					} else if(check.endsWith("은가") || check.endsWith("는가")
 							||check.endsWith("나")||check.endsWith("까")) {
 						target.get(i).setPatn(60); //보조 형용사

@@ -1,6 +1,7 @@
 package com.jane191.nature;
 
 import org.apache.lucene.analysis.ko.utils.DictionaryUtil;
+import org.apache.lucene.analysis.ko.utils.SynonymEntry;
 
 public class SynonymHandler {
 	public SynonymOutput synonym(String key) {
