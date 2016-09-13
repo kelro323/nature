@@ -15,12 +15,12 @@ public class PostProcess {
 	private static final HashSet<String> busaJosa = new HashSet<String>();
 	
 	static {
-		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"};
-		String[] objs = new String[] {"을","를","은","는","도","만"};
-		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다"};
-		String[] cons = new String[] {"고","며","으며","면서"};
-		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"};
-		String[] busas = new String[] {"에","에서","에게","와","과","으로","로"};
+		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
+		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
+		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다"}; //종결 어미
+		String[] cons = new String[] {"고","며","으며","면서"}; //연결 어미
+		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
+		String[] busas = new String[] {"에","에서","에게","와","과","으로","로"}; //부사격 조사
 		
 		addList(nomiJosa,nomis);
 		addList(objJosa,objs);
