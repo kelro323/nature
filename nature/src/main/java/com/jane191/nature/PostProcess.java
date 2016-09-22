@@ -39,7 +39,9 @@ public class PostProcess {
 			if(adnomiEJ.contains(foreAnal.getEomi())||adnomiEJ.contains(foreAnal.getJosa())) {
 				foreAnal = outlist.get(index-2).get(0);
 			}
-			
+			if(foreAnal.getUsedPos()==PatternConstants.POS_VERB) {
+				
+			}
 		}
 		return true;
 	}
