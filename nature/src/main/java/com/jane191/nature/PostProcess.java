@@ -16,8 +16,8 @@ public class PostProcess {
 	private static final HashSet<String> endEomi = new HashSet<String>();
 	/** 연결 어미 */
 	private static final HashSet<String> conEomi = new HashSet<String>();
-	/** 관형사형 어미&조사 */
-	private static final HashSet<String> adnomiEJ = new HashSet<String>();
+	/** 관형사형 어미*/
+	private static final HashSet<String> adnomiEomi = new HashSet<String>();
 	/** 부사격 조사 */
 	private static final HashSet<String> busaJosa = new HashSet<String>();
 	/** 부사형 어미 */
@@ -30,7 +30,8 @@ public class PostProcess {
 		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
 		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다"}; //종결 어미
 		String[] cons = new String[] {"고","며","으며","면서"}; //연결 어미
-		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던","의"}; //관형사형 어미&조사
+		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
+		//관형사형 어미를 체크하는게 필요없을 가능성이 보임.
 		String[] busaj = new String[] {"에","에서","에게","와","과","으로","로"}; //부사격 조사
 		String[] busae = new String[] {"도록", "게"}; //부사형 어미
 		String[] dej = new String[] {"이다", "이면", "이고", "이니", "이지"}; //서술격 조사
@@ -39,7 +40,7 @@ public class PostProcess {
 		addList(objJosa,objs);
 		addList(endEomi,ends);
 		addList(conEomi,cons);
-		addList(adnomiEJ,adnomis);
+		addList(adnomiEomi,adnomis);
 		addList(busaJosa,busaj);
 		addList(busaEomi,busae);
 		addList(deJosa, dej);
@@ -66,14 +67,22 @@ public class PostProcess {
 		if(index < outList.size()-1) {
 			nextList = outList.get(index+1);
 		}
-		
-		if(adnomiEJ.contains(foreAnal.getJosa())) {
+		//관형사 체크를 위한 어미, 관형사형 조사느니 "의" 밖에 없으므로 따로
+		if(foreAnal.getJosa()!=null&&foreAnal.getJosa().equals("의")) {
+			if(index>1) foreAnal = outList.get(index-2).get(0);
+			else {
+				foreAnal.setUsedPos('A');
+				foreAnal.setScore(AnalysisOutput.SCORE_FAIL);
+			}
+		}
+		/*
+		if(adnomiEomi.contains(foreAnal.getEomi())||(foreAnal.getJosa()!=null&&foreAnal.getJosa().equals("의"))) {
 			if(index>1) foreAnal = outList.get(index-2).get(0);
 			else {
 				foreAnal.setUsedPos('A'); //관형사로 포스 셋
 				foreAnal.setScore(AnalysisOutput.SCORE_FAIL); //실패 스코어로 변경
 			}
-		}
+		}*/
 		List<AnalysisOutput> preList = outList.get(index);
 		int preSize = preList.size();
 		if(foreAnal.getScore()> AnalysisOutput.SCORE_FAIL && nextList!=null) {
@@ -194,6 +203,12 @@ public class PostProcess {
 						break;
 					}
 				}
+			} else {
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+						tempNounList.add(pre);
+					}
+				}
 			}
 			if(verbCheck) preList = tempVerbList;
 			else preList = tempNounList;
@@ -211,7 +226,7 @@ public class PostProcess {
 					//현재가 관형사일때
 					if((pre.getPos()==PatternConstants.POS_AID&&
 							(pre.getPosType()=='d'||pre.getPosType()=='n'||pre.getPosType()=='p'))
-							||(adnomiEJ.contains(pre.getEomi())||adnomiEJ.contains(pre.getJosa()))) {
+							||pre.getJosa().equals("의")) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외
 						tempList.add(pre);
 						break;
 					//현재가 접속부사일때

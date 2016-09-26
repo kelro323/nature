@@ -12,9 +12,7 @@ public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "20대 중반의 이른 나이에 갑자기 찾아온 백내장 진단에 제가 크게 당황하지 않도록 담당 의사와 간호 실장이 함께 발병원인부터 수술과정 및 보험적용 여부까지 상세히 상담을 해주셨습니다. 그뿐만 아니라 이 사실을 부모님께도 따로 전화를 드려 차분하게 알려주었습니다. 수술 전, 후로도 마음을 가다듬고 안정을 취할 수 있도록 내 방같이 포근하고 안락한 분위기의 대기실에서 쉴 수 있었고 귀가 시엔 병원 앞에 택시까지 미리 대기시켜주는 서비스를 제공해 주었습니다. 시작부터 마지막까지 책임지고 고객의 완벽한 편의를 위한 서비스를 받을 수 있었습니다. "+
-"해외구매대행으로 가방을 구매한 적이 있었습니다. 공지사항을 상세히 읽고 구매를 했음에도 불구하고 배송예정일이 훨씬 지나도 가방은 오지 않았습니다. 이에 문의 글을 남겼으나 오랜 기간 답변도 없었고 수차례 전화를 한 뒤에야 입금확인이 안 돼서 가방구매가 되지 않았고 그 사이에 가방 가격이 올랐으니 차액도 입금해달라는 답변을 받았습니다. 분명 사이트상에선 입금확인과 더불어 물품 구매단계 중이라 되어있었습니다. 거짓 정보와 문의에 대해 뒤늦은 대응과 책임 전가는 최악의 서비스였습니다.";
-				
+		String input2 = "공지사항을 상세히 읽고 구매를 했음에도 불구하고 배송예정일이 훨씬 지나도 가방은 오지 않았습니다";
 		String input1 = "나는 그림을 연습하였다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -31,8 +29,8 @@ public class Main {
 			for (int i=0; i < result.size() ; i++) {
 				postProcess(result, i, result2);
 				}
-			System.out.println("불용어 처리   : "+result2);
-			System.out.println("불용어 처리   : "+result3);
+			//System.out.println("불용어 처리   : "+result2);
+			//System.out.println("불용어 처리   : "+result3);
 			for(int i = 0;i<result.size(); i++) {
 				
 				if(result.get(i).size()>1) {
