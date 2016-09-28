@@ -67,7 +67,7 @@ public class PostProcess {
 		if(index < outList.size()-1) {
 			nextList = outList.get(index+1);
 		}
-		//관형사 체크를 위한 어미, 관형사형 조사느니 "의" 밖에 없으므로 따로
+		//관형사 체크를 위한 어미, 관형사형 조사는 "의" 밖에 없으므로 따로
 		if(foreAnal.getJosa()!=null&&foreAnal.getJosa().equals("의")) {
 			if(index>1) foreAnal = outList.get(index-2).get(0);
 			else {
@@ -84,7 +84,6 @@ public class PostProcess {
 			}
 		}*/
 		List<AnalysisOutput> preList = outList.get(index);
-		int preSize = preList.size();
 		if(foreAnal.getScore()> AnalysisOutput.SCORE_FAIL && nextList!=null) {
 			if(foreAnal.getUsedPos()==PatternConstants.POS_NOUN) {
 				//명사 케이스
@@ -96,7 +95,7 @@ public class PostProcess {
 		} else if(nextList!=null){
 			//관형격일때
 			if(foreAnal.getUsedPos()=='A') {
-				adnomiCase(preList, outList, preSize, index);
+				adnomiCase(preList, nextList, outList, index);
 			} else { //처음일때
 				firstCase(preList, nextList, index, outList);
 			}
@@ -184,23 +183,48 @@ public class PostProcess {
 			List<AnalysisOutput> tempNounList = new ArrayList<AnalysisOutput>();
 			boolean verbCheck = false;
 			if(busaEomi.contains(foreAnal.getEomi())) {
-				//뒤에 명사형이 동사형이 올 수도 있는 상황. 뒤에 구절이 타동사로 이루어지면 목적어가 들어와 명사형이 나타나고
+				//뒤에 명사형, 동사형 둘 다 올 수도 있는 상황. 뒤에 구절이 타동사로 이루어지면 목적어가 들어와 명사형이 나타나고
 				//자동사인 경우 바로 동사형이 선택.
-				for(AnalysisOutput pre : preList) {
-					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
-						for(AnalysisOutput ne : nextList) {
-							if(ne.getUsedPos()==PatternConstants.POS_VERB &&
-									(ne.getPosType()=='t'||ne.getPosType()=='v'||ne.getPosType()=='k')) {
-								verbCheck = false;
+				for(AnalysisOutput ne : nextList) {
+					if(ne.getUsedPos()==PatternConstants.POS_VERB &&
+							(ne.getPosType()=='t'||ne.getPosType()=='k')) {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getPos()==PatternConstants.POS_NOUN && 
+									objJosa.contains(pre.getJosa())) {
 								tempNounList.add(pre);
-								break;
 							}
 						}
-						break;
-					} else if(pre.getUsedPos()==PatternConstants.POS_VERB) {
-						verbCheck = true;
-						tempVerbList.add(pre);
-						break;
+					} else if(ne.getUsedPos()==PatternConstants.POS_VERB &&
+							(ne.getPosType()=='i'||ne.getPosType()=='d')) {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getUsedPos()==PatternConstants.POS_AID) {
+								tempVerbList.add(pre);
+							}
+						}
+					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getPosType()=='v') {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getUsedPos()==PatternConstants.POS_NOUN && objJosa.contains(pre.getJosa())) {
+								tempNounList.add(pre);
+							} else if(pre.getUsedPos()==PatternConstants.POS_AID) {
+								tempVerbList.add(pre);
+							}
+						}
+					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getPosType()=='b') {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+								tempVerbList.add(pre);
+							}
+						}
+					} else if(ne.getUsedPos()==PatternConstants.POS_AID) {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getPos()==PatternConstants.POS_VERB) {
+								tempVerbList.add(pre);
+							}
+						}
+					} else if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
+						for(AnalysisOutput pre : preList) {
+							
+						}
 					}
 				}
 			} else {
@@ -260,20 +284,33 @@ public class PostProcess {
 		outList.add(index, tempList);
 	}
 	
-	private static void adnomiCase(List<AnalysisOutput> preList, List<List<AnalysisOutput>>outList,
-			int preSize, int index) {
-		boolean nounChecker = false;
+	private static void adnomiCase(List<AnalysisOutput> preList, List<AnalysisOutput> nextList,
+			List<List<AnalysisOutput>>outList, int index) {
+		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 		for(AnalysisOutput pre : preList) {
-			if(pre.getUsedPos()==PatternConstants.POS_NOUN) nounChecker = true;
-		}
-		if(nounChecker) {
-			if(preSize==2) {
-				int check = 0;
-				if(preList.get(1).getUsedPos()==PatternConstants.POS_NOUN) check=1;
-				preList.remove(check);
-				outList.remove(index);
-				outList.add(index, preList);
+			if(pre.getUsedPos()==PatternConstants.POS_NOUN && nomiJosa.contains(pre.getJosa()))  {
+				tempList.add(pre);
+			} else if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+				for(AnalysisOutput ne : nextList) {
+					if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+						tempList.add(pre);
+					}
+				}
+			} else if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+				for(AnalysisOutput ne : nextList) {
+					if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
+						tempList.add(pre);
+					}
+				}
+			} else {
+				for(AnalysisOutput ne : nextList) {
+					if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+						tempList.add(pre);
+					}
+				}
 			}
 		}
+		outList.remove(index);
+		outList.add(index, tempList);
 	}
 }
