@@ -57,7 +57,7 @@ public class PostProcess {
 	
 	public static void selectResults(List<List<AnalysisOutput>> outList, int index) {
 		//index-1 & index+1의 결과값을 보고 index 의 결과값을 결정.
-		//ex) VM vs NJ 의 경우 V가 타동사이고 index-1이 목적격 조사를 포함한 경우 V로 판단 하는 등. 확률형보단 법칙형으로 설계 예정
+		//ex) VM vs NJ 의 경우 V가 타동사이고 index-1이 목적격 조사를 포함한 경우 V로 판단 하는 등.
 		AnalysisOutput foreAnal = new AnalysisOutput();
 		List<AnalysisOutput> nextList = new ArrayList<AnalysisOutput>();
 
@@ -75,7 +75,7 @@ public class PostProcess {
 				foreAnal.setScore(AnalysisOutput.SCORE_FAIL);
 			}
 		}
-		/*
+		/* 관형어미도 체크하는건 V N 체크하는데 의미가 없어서 우선 삭제 
 		if(adnomiEomi.contains(foreAnal.getEomi())||(foreAnal.getJosa()!=null&&foreAnal.getJosa().equals("의"))) {
 			if(index>1) foreAnal = outList.get(index-2).get(0);
 			else {
@@ -187,7 +187,7 @@ public class PostProcess {
 				//자동사인 경우 바로 동사형이 선택.
 				for(AnalysisOutput ne : nextList) {
 					if(ne.getUsedPos()==PatternConstants.POS_VERB &&
-							(ne.getPosType()=='t'||ne.getPosType()=='k')) {
+							(ne.getUsedPosType()=='t'||ne.getUsedPosType()=='k')) {
 						for(AnalysisOutput pre : preList) {
 							if(pre.getPos()==PatternConstants.POS_NOUN && 
 									objJosa.contains(pre.getJosa())) {
@@ -195,13 +195,13 @@ public class PostProcess {
 							}
 						}
 					} else if(ne.getUsedPos()==PatternConstants.POS_VERB &&
-							(ne.getPosType()=='i'||ne.getPosType()=='d')) {
+							(ne.getUsedPosType()=='i'||ne.getUsedPosType()=='d')) {
 						for(AnalysisOutput pre : preList) {
 							if(pre.getUsedPos()==PatternConstants.POS_AID) {
 								tempVerbList.add(pre);
 							}
 						}
-					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getPosType()=='v') {
+					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getUsedPosType()=='v') {
 						for(AnalysisOutput pre : preList) {
 							if(pre.getUsedPos()==PatternConstants.POS_NOUN && objJosa.contains(pre.getJosa())) {
 								tempNounList.add(pre);
@@ -209,7 +209,7 @@ public class PostProcess {
 								tempVerbList.add(pre);
 							}
 						}
-					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getPosType()=='b') {
+					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getUsedPosType()=='b') {
 						for(AnalysisOutput pre : preList) {
 							if(pre.getUsedPos()==PatternConstants.POS_VERB) {
 								tempVerbList.add(pre);
@@ -227,6 +227,8 @@ public class PostProcess {
 						}
 					}
 				}
+			} else if(foreAnal.getUsedPosType()=='b') { //보조 동사 파트
+				
 			} else {
 				for(AnalysisOutput pre : preList) {
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
