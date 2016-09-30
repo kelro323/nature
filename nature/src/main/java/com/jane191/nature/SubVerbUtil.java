@@ -26,9 +26,46 @@ public class SubVerbUtil {
 		List<AnalysisOutput> preList = outList.get(index);
 		
 		if(foreAnal.getScore()>AnalysisOutput.SCORE_FAIL) {
-			if(foreAnal.getUsedPos()==PatternConstants.POS_VERB) {
+			if(foreAnal.getUsedPos()==PatternConstants.POS_VERB || foreAnal.getPatn()==PatternConstants.PTN_NJ) {
 				for(AnalysisOutput pre : preList) {
-					
+					if(subVerb.contains(pre.getStem()+"다") 
+							&& pre.getUsedPos()==PatternConstants.POS_VERB) {
+						String former = foreAnal.getSource().substring(foreAnal.getStem().length());
+						String foreEomi = foreAnal.getEomi();
+						if(pre.getStem().equals("보")) {
+							if(foreEomi.equals("어")) {
+								pre.setUsedPosType('b');
+							} else if(foreEomi.equals("고")||foreEomi.equals("다")||foreEomi.equals("다가")) {
+								pre.setUsedPosType('b');
+							} else if(foreEomi.equals("은가")||foreEomi.equals("는가")||foreEomi.equals("나")) {
+								pre.setUsedPosType('b');
+							} else if(foreEomi.equals("ㄹ까")||foreEomi.equals("을까")) {
+								pre.setUsedPosType('b');
+							} else if(foreAnal.getJosa().equals("이다")) {
+								if(pre.getEomi().equals("아")||pre.getEomi().equals("니")||pre.getEomi().equals("다")) {
+									pre.setUsedPosType('b');
+								}
+							}
+						} else if(pre.getStem().equals("가")) {
+							if(foreEomi.equals("어")) pre.setUsedPosType('b');
+						} else if(pre.getStem().equals("가지")) {
+							if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
+						} else if(pre.getStem().equals("나")) {
+							if(foreEomi.equals("어")||foreEomi.equals("고")) pre.setUsedPosType('b');
+						} else if(pre.getStem().equals("내")) {
+							if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
+						} else if(pre.getStem().equals("놓")) {
+							if(foreEomi.equals("어")||foreAnal.getJosa().equals("라")||foreAnal.getJosa().equals("이다")) {
+								pre.setUsedPosType('b');
+							}
+						} else if(pre.getStem().equals("대")) {
+							if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
+						} else if(pre.getStem().equals("두")) {
+							if(foreEomi.equals("어")) pre.setUsedPosType('b');
+						} else if(pre.getStem().equals("마")) {
+							
+						}
+					}
 				}
 			}
 		} 

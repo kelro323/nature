@@ -279,6 +279,7 @@ public class PostProcess {
 		for(AnalysisOutput pre : preList) {
 			if(endEomi.contains(pre.getEomi())
 					||pre.getJosa().equals("이다")||pre.getJosa().equals("이지")) {
+				//이다 의 경우 보조동사가 뒤에 오면 종결 어미가 아니므로 고려해야하는가...
 				tempList.add(pre);
 			}
 		}
