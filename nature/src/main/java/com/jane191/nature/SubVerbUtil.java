@@ -30,46 +30,84 @@ public class SubVerbUtil {
 				for(AnalysisOutput pre : preList) {
 					if(subVerb.contains(pre.getStem()+"다") 
 							&& pre.getUsedPos()==PatternConstants.POS_VERB) {
-						String former = foreAnal.getSource().substring(foreAnal.getStem().length());
 						String foreEomi = foreAnal.getEomi();
-						if(pre.getStem().equals("보")) {
-							if(foreEomi.equals("어")) {
-								pre.setUsedPosType('b');
-							} else if(foreEomi.equals("고")||foreEomi.equals("다")||foreEomi.equals("다가")) {
-								pre.setUsedPosType('b');
-							} else if(foreEomi.equals("은가")||foreEomi.equals("는가")||foreEomi.equals("나")) {
-								pre.setUsedPosType('b');
-							} else if(foreEomi.equals("ㄹ까")||foreEomi.equals("을까")) {
-								pre.setUsedPosType('b');
-							} else if(foreAnal.getJosa().equals("이다")) {
-								if(pre.getEomi().equals("아")||pre.getEomi().equals("니")||pre.getEomi().equals("다")) {
-									pre.setUsedPosType('b');
-								}
-							}
-						} else if(pre.getStem().equals("가")) {
-							if(foreEomi.equals("어")) pre.setUsedPosType('b');
-						} else if(pre.getStem().equals("가지")) {
-							if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
-						} else if(pre.getStem().equals("나")) {
-							if(foreEomi.equals("어")||foreEomi.equals("고")) pre.setUsedPosType('b');
-						} else if(pre.getStem().equals("내")) {
-							if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
-						} else if(pre.getStem().equals("놓")) {
-							if(foreEomi.equals("어")||foreAnal.getJosa().equals("라")||foreAnal.getJosa().equals("이다")) {
-								pre.setUsedPosType('b');
-							}
-						} else if(pre.getStem().equals("대")) {
-							if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
-						} else if(pre.getStem().equals("두")) {
-							if(foreEomi.equals("어")) pre.setUsedPosType('b');
-						} else if(pre.getStem().equals("마")) {
-							
-						}
+						subVerbCheck(foreAnal, pre, foreEomi);
 					}
 				}
 			}
-		} 
+		}
 	}
+	
+	private static void subVerbCheck(AnalysisOutput foreAnal, AnalysisOutput pre, String foreEomi) {
+		if(pre.getStem().equals("가")) {
+			if(foreEomi.equals("어")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("가지")) {
+			if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("나")) {
+			if(foreEomi.equals("어")||foreEomi.equals("고")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("내")) {
+			if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("놓")) {
+			if(foreEomi.equals("어")||foreAnal.getJosa().equals("라")||foreAnal.getJosa().equals("이어")) {
+				pre.setUsedPosType('b');
+			}
+		} else if(pre.getStem().equals("대")) {
+			if(foreEomi.equals("어")||foreEomi.equals("아")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("두")) {
+			if(foreEomi.equals("어")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("말")) {
+			if(foreEomi.equals("지")) pre.setUsedPosType('b');
+			else if(foreEomi.equals("고")||foreEomi.equals("고야")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("먹")) {
+			if(foreEomi.equals("어")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("못하")) {
+			if(foreEomi.equals("지")) pre.setUsedPosType('b');
+			else if(foreEomi.equals("다")||foreEomi.equals("다가")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("버리")) {
+			if(foreEomi.equals("어")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("보")) {
+			if(foreEomi.equals("어")) {
+				pre.setUsedPosType('b');
+			} else if(foreEomi.equals("고")||foreEomi.equals("다")||foreEomi.equals("다가")) {
+				pre.setUsedPosType('b');
+			} else if(foreEomi.equals("은가")||foreEomi.equals("는가")||foreEomi.equals("나")) {
+				pre.setUsedPosType('b');
+			} else if(foreEomi.equals("ㄹ까")||foreEomi.equals("을까")) {
+				pre.setUsedPosType('b');
+			} else if(foreAnal.getJosa().equals("이다")) {
+				if(pre.getEomi().equals("아")||pre.getEomi().equals("니")||pre.getEomi().equals("다")) {
+					pre.setUsedPosType('b');
+				}
+			}
+		} else if(pre.getStem().equals("쌓")) {
+			if(foreEomi.equals("어")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("않")) {
+			if(foreEomi.equals("지")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("오")) {
+			if(foreEomi.equals("아")||foreEomi.equals("어")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("있")) {
+			if(foreEomi.equals("아")||foreEomi.equals("어")) pre.setUsedPosType('b');
+			else if(foreEomi.equals("고")) pre.setUsedPosType('b');
+		} else if(pre.getStem().equals("주")) {
+			if(foreEomi.equals("어")) pre.setUsedPosType('b');
+		} else {
+			if(foreEomi.equals("게")) pre.setUsedPosType('b');
+			else if(foreEomi.equals("으면") && foreAnal.getPomi().equals("었")) pre.setUsedPosType('b');
+			else if(foreEomi.equals("어야")) pre.setUsedPosType('b');
+			else if(foreEomi.equals("으려")||foreEomi.equals("려")
+					||foreEomi.equals("으려고")||foreEomi.equals("려고")||foreEomi.equals("고자")) {
+				pre.setUsedPosType('b');
+			} else if((foreEomi.equals("는")||foreEomi.equals("도")||foreEomi.equals("나"))
+					&& foreAnal.getElist().get(0).equals("기")) {
+				pre.setUsedPosType('b');
+			} else if(foreEomi.equals("고")) {
+				if(pre.getEomi().equals("어서")||pre.getEomi().equals("어")||pre.getEomi().equals("니")) {
+					pre.setUsedPosType('b');
+				}
+			} else if(foreEomi.equals("고는")||foreEomi.equals("곤")) pre.setUsedPosType('b');
+		}
+	}
+	
 	//의미의 차이가 없이 그냥 삭제가 가능한 경우 하나로 묶으면 될듯
 	//equals 이랑 endsWith 조건에 대해선 좀 더 검수가 필요함
 	public static void checkSubVerb(List<AnalysisOutput> target, List<AnalysisOutput> former) {
