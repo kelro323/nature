@@ -13,7 +13,7 @@ public class Main {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
 		String input2 = "공지사항을 상세히 읽고 구매를 했음에도 불구하고 배송예정일이 훨씬 지나도 가방은 오지 않았습니다";
-		String input1 = "나는 그림을 연습하였다.";
+		String input1 = "나는 너를 사랑한다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
 			String token2 = token.nextToken();
