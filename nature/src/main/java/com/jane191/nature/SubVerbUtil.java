@@ -25,14 +25,12 @@ public class SubVerbUtil {
 		}
 		List<AnalysisOutput> preList = outList.get(index);
 		
-		if(foreAnal.getScore()>AnalysisOutput.SCORE_FAIL) {
-			if(foreAnal.getUsedPos()==PatternConstants.POS_VERB || foreAnal.getPatn()==PatternConstants.PTN_NJ) {
-				for(AnalysisOutput pre : preList) {
-					if(subVerb.contains(pre.getStem()+"다") 
-							&& pre.getUsedPos()==PatternConstants.POS_VERB) {
-						String foreEomi = foreAnal.getEomi();
-						subVerbCheck(foreAnal, pre, foreEomi);
-					}
+		if(foreAnal.getUsedPos()==PatternConstants.POS_VERB || foreAnal.getPatn()==PatternConstants.PTN_NJ) {
+			for(AnalysisOutput pre : preList) {
+				if(subVerb.contains(pre.getStem()+"다") 
+						&& pre.getUsedPos()==PatternConstants.POS_VERB) {
+					String foreEomi = foreAnal.getEomi();
+					subVerbCheck(foreAnal, pre, foreEomi);
 				}
 			}
 		}
