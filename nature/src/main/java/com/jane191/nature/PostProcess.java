@@ -181,7 +181,6 @@ public class PostProcess {
 		if(foreAnal.getEomi()!=null) {
 			List<AnalysisOutput> tempVerbList = new ArrayList<AnalysisOutput>();
 			List<AnalysisOutput> tempNounList = new ArrayList<AnalysisOutput>();
-			boolean verbCheck = false;
 			if(busaEomi.contains(foreAnal.getEomi())) {
 				//뒤에 명사형, 동사형 둘 다 올 수도 있는 상황. 뒤에 구절이 타동사로 이루어지면 목적어가 들어와 명사형이 나타나고
 				//자동사인 경우 바로 동사형이 선택.
@@ -223,12 +222,28 @@ public class PostProcess {
 						}
 					} else if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
 						for(AnalysisOutput pre : preList) {
-							
+							if(pre.getUsedPosType()=='n'||pre.getUsedPosType()=='p') {
+								tempVerbList.add(pre);
+							} else if(adnomiEomi.contains(pre.getEomi())) {
+								tempVerbList.add(pre);
+							} else if(pre.getPatn()==PatternConstants.PTN_N) {
+								tempNounList.add(pre);
+							} else if(pre.getPatn()==PatternConstants.PTN_NJ && pre.getJosa().equals("의")) {
+								tempNounList.add(pre);
+							}
 						}
 					}
 				}
 			} else if(foreAnal.getUsedPosType()=='b') { //보조 동사 파트
-				
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+						tempNounList.add(pre);
+					} else if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+						if(foreAnal.getEomi().equals("고")) {
+							tempVerbList.add(pre);
+						}
+					}
+				}
 			} else {
 				for(AnalysisOutput pre : preList) {
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
@@ -236,8 +251,9 @@ public class PostProcess {
 					}
 				}
 			}
-			if(verbCheck) preList = tempVerbList;
-			else preList = tempNounList;
+			//어떤 List를 선택해야 하는 것에 대한 건 고민이 필요함
+			if(tempNounList.size() >= tempVerbList.size()) preList = tempNounList;
+			else preList = tempVerbList;
 			outList.remove(index);
 			outList.add(index, preList);
 		}
