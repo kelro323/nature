@@ -152,8 +152,11 @@ public class PostProcess {
 			// 주격 조사일때
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN && !deJosa.contains(pre.getJosa())) {
-					preList.remove(pre);
+					tempList.add(pre);
 				}
+			}
+			for(AnalysisOutput temp : tempList) {
+				preList.remove(temp);
 			}
 			outList.remove(index);
 			outList.add(index, preList);
@@ -161,8 +164,11 @@ public class PostProcess {
 			// 서술격 조사일때
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN && !nomiJosa.contains(pre.getJosa())) {
-					preList.remove(pre);
+					tempList.add(pre);
 				}
+			}
+			for(AnalysisOutput temp : tempList) {
+				preList.remove(temp);
 			}
 			outList.remove(index);
 			outList.add(index, preList);
