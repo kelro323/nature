@@ -2,6 +2,7 @@ package com.jane191.nature;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.lucene.analysis.ko.morph.AnalysisOutput;
@@ -114,10 +115,10 @@ public class PostProcess {
 	//앞의 토큰이 명사 사용일때
 	private static void nounCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList, List<AnalysisOutput> nextList,
 			int index, List<List<AnalysisOutput>> outList) {
+		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 		//조사가 존재하고, 그 조사가 주격 조사나 서술격 조사가 아닐때
 		if(foreAnal.getJosa()!=null 
-				&& !(nomiJosa.contains(foreAnal.getEomi())||deJosa.contains(foreAnal.getEomi()))) {
-			List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
+				&& !(nomiJosa.contains(foreAnal.getJosa())||deJosa.contains(foreAnal.getJosa()))) {
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
@@ -126,6 +127,7 @@ public class PostProcess {
 			for(AnalysisOutput temp : tempList) {
 				preList.remove(temp);
 			}
+			//tempList의 명사 제거 목적은 완료, 밑에서는 결과값 임시 저장을 위해서 사용.
 			if(preList.size()>1) {
 				boolean detBusa = false;
 				for(AnalysisOutput ne : nextList) {
@@ -140,11 +142,12 @@ public class PostProcess {
 						tempBusaList.add(pre);
 					} else tempVerbList.add(pre);
 				}
-				if(detBusa) preList = tempBusaList;
-				else preList = tempVerbList;
+				if(detBusa) tempList = tempBusaList;
+				else tempList = tempVerbList;
 			}
+			removeSame(tempList);
 			outList.remove(index);
-			outList.add(index, preList);
+			outList.add(index, tempList);
 		} else if(nomiJosa.contains(foreAnal.getJosa())) { 
 			// 주격 조사일때
 			for(AnalysisOutput pre : preList) {
@@ -165,7 +168,6 @@ public class PostProcess {
 			outList.add(index, preList);
 		} else {
 			// 조사가 없을때
-			List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
@@ -252,10 +254,11 @@ public class PostProcess {
 				}
 			}
 			//어떤 List를 선택해야 하는 것에 대한 건 고민이 필요함
-			if(tempNounList.size() >= tempVerbList.size()) preList = tempNounList;
-			else preList = tempVerbList;
 			outList.remove(index);
-			outList.add(index, preList);
+			removeSame(tempNounList);
+			removeSame(tempVerbList);
+			if(tempNounList.size() >= tempVerbList.size()) outList.add(index, tempNounList);
+			else outList.add(index, tempVerbList);
 		}
 	}
 	
@@ -329,7 +332,14 @@ public class PostProcess {
 				}
 			}
 		}
+		removeSame(tempList);
 		outList.remove(index);
 		outList.add(index, tempList);
+	}
+	
+	private static List<AnalysisOutput> removeSame(List<AnalysisOutput> list) {
+		List<AnalysisOutput> tempList = 
+				new ArrayList<AnalysisOutput>(new LinkedHashSet<AnalysisOutput>(list));
+		return tempList;
 	}
 }
