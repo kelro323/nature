@@ -30,7 +30,7 @@ public class PostProcess {
 		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
 		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
 		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다"}; //종결 어미
-		String[] cons = new String[] {"고","며","으며","면서"}; //연결 어미
+		String[] cons = new String[] {"고","며","으며","면서","어서"}; //연결 어미
 		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
 		//관형사형 어미를 체크하는게 필요없을 가능성이 보임.
 		String[] busaj = new String[] {"에","에서","에게","와","과","으로","로"}; //부사격 조사
@@ -131,8 +131,11 @@ public class PostProcess {
 			if(preList.size()>1) {
 				boolean detBusa = false;
 				for(AnalysisOutput ne : nextList) {
-					if(ne.getUsedPos()==PatternConstants.POS_VERB && !busaEomi.contains(ne.getEomi())) {
-						detBusa = true;
+					if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+						//의존 명사에 의한 '것이다' '곳이다' 등등에 대한 거에 대한 고찰 필요.
+						if(!busaEomi.contains(ne.getEomi()) && !endEomi.contains(ne.getEomi())) {
+							detBusa = true;
+						}
 					}
 				}
 				List<AnalysisOutput> tempBusaList = new ArrayList<AnalysisOutput>();
@@ -144,7 +147,7 @@ public class PostProcess {
 				}
 				if(detBusa) tempList = tempBusaList;
 				else tempList = tempVerbList;
-			}
+			} else tempList = preList;
 			removeSame(tempList);
 			outList.remove(index);
 			outList.add(index, tempList);
@@ -172,6 +175,39 @@ public class PostProcess {
 			}
 			outList.remove(index);
 			outList.add(index, preList);
+		} else if(foreAnal.getEomi()!=null){
+			//-기 어미에 의해서 명사형으로 취급될때
+			for(AnalysisOutput pre : preList) {
+				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+					tempList.add(pre);
+				}
+			}
+			for(AnalysisOutput temp : tempList) {
+				preList.remove(temp);
+			}
+			if(preList.size()>1) {
+				boolean detBusa = false;
+				for(AnalysisOutput ne : nextList) {
+					if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+						//의존 명사에 의한 '것이다' '곳이다' 등등에 대한 거에 대한 고찰 필요.
+						if(!busaEomi.contains(ne.getEomi()) && !endEomi.contains(ne.getEomi())) {
+							detBusa = true;
+						}
+					}
+				}
+				List<AnalysisOutput> tempBusaList = new ArrayList<AnalysisOutput>();
+				List<AnalysisOutput> tempVerbList = new ArrayList<AnalysisOutput>();
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPos()==PatternConstants.POS_AID || busaEomi.contains(pre.getEomi())) {
+						tempBusaList.add(pre);
+					} else tempVerbList.add(pre);
+				}
+				if(detBusa) tempList = tempBusaList;
+				else tempList = tempVerbList;
+			} else tempList = preList;
+			removeSame(tempList);
+			outList.remove(index);
+			outList.add(index, tempList);
 		} else {
 			// 조사가 없을때
 			for(AnalysisOutput pre : preList) {
@@ -251,6 +287,11 @@ public class PostProcess {
 							tempVerbList.add(pre);
 						}
 					}
+				}
+			} else if(conEomi.contains(foreAnal.getEomi())) {
+				//연결 어미일 경우 둘다 가능해서 아직 정하지 못해 그냥 다 tempList에 넣는걸로 함.
+				for(AnalysisOutput pre : preList) {
+					tempNounList.add(pre);
 				}
 			} else {
 				for(AnalysisOutput pre : preList) {
@@ -347,5 +388,19 @@ public class PostProcess {
 		List<AnalysisOutput> tempList = 
 				new ArrayList<AnalysisOutput>(new LinkedHashSet<AnalysisOutput>(list));
 		return tempList;
+	}
+	/**
+	 -기 어미에 의해서 명사형인 토큰을 찾아서 UsedPos 변경 N으로 변경
+	 (morphAnalyzer에서 변경 가능하면 그 쪽에서 하는게 이득일듯)
+	 */
+	public static List<List<AnalysisOutput>> nounEomi(List<List<AnalysisOutput>> list) {
+		for(List<AnalysisOutput> tempList : list) {
+			for(AnalysisOutput temp : tempList) {
+				if(temp.getEomi()!=null && temp.getEomi().equals("기")) {
+					temp.setUsedPos(PatternConstants.POS_NOUN);
+				}
+			}
+		}
+		return list;
 	}
 }

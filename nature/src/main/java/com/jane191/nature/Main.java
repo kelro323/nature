@@ -12,7 +12,7 @@ public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "공지사항을 상세히 읽고 구매를 했음에도 불구하고 배송예정일이 훨씬 지나도 가방은 오지 않았습니다";
+		String input2 = "외국 대학을 방문해 학생회를 조사한 것을 바탕으로 우리 학교 학생회의 발전 방안을 찾는 교내 프로젝트에 참여했었습니다.";
 		String input1 = "나는 너를 사랑한다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -21,6 +21,7 @@ public class Main {
 			List<List<AnalysisOutput>> result = aah.morphAnalayzer(token2);
 			
 			System.out.println("형태소 분석 : " +result);
+			result = PostProcess.nounEomi(result);
 			
 			List<ArrayList<String>> result2 = new ArrayList<ArrayList<String>>();
 			List<ArrayList<String>> result3 = new ArrayList<ArrayList<String>>();
