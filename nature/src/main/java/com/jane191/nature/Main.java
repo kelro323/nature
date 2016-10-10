@@ -21,7 +21,7 @@ public class Main {
 			List<List<AnalysisOutput>> result = aah.morphAnalayzer(token2);
 			
 			System.out.println("형태소 분석 : " +result);
-			result = PostProcess.nounEomi(result);
+			result = PostProcessUtil.nounEomi(result);
 			
 			List<ArrayList<String>> result2 = new ArrayList<ArrayList<String>>();
 			List<ArrayList<String>> result3 = new ArrayList<ArrayList<String>>();
@@ -35,7 +35,7 @@ public class Main {
 			for(int i = 0;i<result.size(); i++) {
 				
 				if(result.get(i).size()>1) {
-					PostProcess.selectResults(result, i);
+					PostProcessUtil.selectResults(result, i);
 				}
 			}
 			System.out.println("실험"+result);

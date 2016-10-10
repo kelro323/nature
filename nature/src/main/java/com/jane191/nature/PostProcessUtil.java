@@ -10,7 +10,7 @@ import org.apache.lucene.analysis.ko.morph.PatternConstants;
 import org.apache.lucene.analysis.ko.morph.WordEntry;
 import org.apache.lucene.analysis.ko.utils.DictionaryUtil;
 
-public class PostProcess {
+public class PostProcessUtil {
 	/** 주격 조사 */
 	private static final HashSet<String> nomiJosa = new HashSet<String>();
 	/** 목적격 조사	 */
