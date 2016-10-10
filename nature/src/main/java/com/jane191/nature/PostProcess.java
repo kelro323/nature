@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.apache.lucene.analysis.ko.morph.AnalysisOutput;
 import org.apache.lucene.analysis.ko.morph.PatternConstants;
+import org.apache.lucene.analysis.ko.morph.WordEntry;
+import org.apache.lucene.analysis.ko.utils.DictionaryUtil;
 
 public class PostProcess {
 	/** 주격 조사 */
@@ -175,7 +177,7 @@ public class PostProcess {
 			}
 			outList.remove(index);
 			outList.add(index, preList);
-		} else if(foreAnal.getEomi()!=null){
+		} else if(foreAnal.getEomi()!=null) {
 			//-기 어미에 의해서 명사형으로 취급될때
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
@@ -402,5 +404,37 @@ public class PostProcess {
 			}
 		}
 		return list;
+	}
+	
+	/**
+	 -히로 끝나는 일반 부사형은 -히의 어간에 따라 속성값이 정해짐
+	 (N(혹은 V,Z)+히 형태로 변경)
+	 */
+	public static AnalysisOutput hiCase(AnalysisOutput anal) {
+		String temp = anal.getStem().substring(0, anal.getStem().length()-1);
+		WordEntry entry = DictionaryUtil.getWord(temp);
+		if(anal.getPatn()==PatternConstants.PTN_AID && anal.getStem().endsWith("히")) {
+			if(entry!=null) {
+				//조사 대신 접사에 -히를 넣어야하는데 이건 아직 추가안함.
+				//성실히같이 XX -> XX히가 되는 것
+				AnalysisOutput output = new AnalysisOutput(temp,"히",null,PatternConstants.PTN_AID);
+				output.setScore(AnalysisOutput.SCORE_CORRECT);
+				output.setPos(PatternConstants.POS_AID);
+				output.setUsedPos(PatternConstants.POS_AID);
+				output.setPosType(entry.getFeature(WordEntry.IDX_NOUN));
+				return output;
+			} else {
+				//부단히 같이 XX하다 -> XX히의 형태로 부사형이 되는 것
+				WordEntry entry2 = DictionaryUtil.getWord(temp+"하");
+				if(entry2!=null) {
+					AnalysisOutput output = new AnalysisOutput(temp,"히",null,PatternConstants.PTN_AID);
+					output.setScore(AnalysisOutput.SCORE_CORRECT);
+					output.setPos(PatternConstants.POS_AID);
+					output.setUsedPos(PatternConstants.POS_AID);
+					output.setPosType(entry.getFeature(WordEntry.IDX_NOUN));
+					return output;
+				} else return anal;
+			}
+		} else return anal;
 	}
 }
