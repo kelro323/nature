@@ -1,6 +1,7 @@
 package com.jane191.nature;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -20,8 +21,13 @@ public class ArirangAnalyzerHandler {
 		StringTokenizer stok = new StringTokenizer(source);
 		while(stok.hasMoreTokens()) {
 			//String token = markRemove(stok.nextToken());
-			String token = markRemove2(stok.nextToken(), ",");
-			token = markRemove2(token,"'");
+			//String token = markRemove2(stok.nextToken(), ",");
+			//token = markRemove2(token,"'");
+			String token = stok.nextToken();
+			HashSet<String> marks = PreProcessUtil.countMark(token);
+			if(marks!=null) {
+				token = PreProcessUtil.markRemove(token, marks);
+			}
 			outList = maAnal.analyze(token);
 			returnList.add(outList);
 		}
