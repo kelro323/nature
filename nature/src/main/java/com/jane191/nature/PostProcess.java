@@ -416,7 +416,7 @@ public class PostProcess {
 		if(anal.getPatn()==PatternConstants.PTN_AID && anal.getStem().endsWith("히")) {
 			if(entry!=null) {
 				//조사 대신 접사에 -히를 넣어야하는데 이건 아직 추가안함.
-				//성실히같이 XX -> XX히가 되는 것
+				//성실히 같이 XX -> XX히가 되는 것
 				AnalysisOutput output = new AnalysisOutput(temp,"히",null,PatternConstants.PTN_AID);
 				output.setScore(AnalysisOutput.SCORE_CORRECT);
 				output.setPos(PatternConstants.POS_AID);
@@ -431,10 +431,13 @@ public class PostProcess {
 					output.setScore(AnalysisOutput.SCORE_CORRECT);
 					output.setPos(PatternConstants.POS_AID);
 					output.setUsedPos(PatternConstants.POS_AID);
-					output.setPosType(entry.getFeature(WordEntry.IDX_NOUN));
+					//이 경우 PosType은 기존 entry가 아닌 다른 사전에서 추출하는게 옳을 듯, 기존 entry는 XX의 뜻이 담긴 정보가 없고
+					//V카테고리의 경우 자,타,형용사 구별을 위한 정보만 있어서 속성값에 관한 정보가 없으므로 다른 사전에서 추출해야함
+					//아니면 V의 속성값이 있는 새로운 카테고리를 추가해야할듯
+					output.setPosType(entry2.getFeature(WordEntry.IDX_NOUN));
 					return output;
-				} else return anal;
+				} else return null;
 			}
-		} else return anal;
+		} else return null;
 	}
 }
