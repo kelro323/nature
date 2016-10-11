@@ -1,6 +1,7 @@
 package com.jane191.nature;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -12,8 +13,8 @@ public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "-사랑,사물-동물-식물-뿌리'줄기-잎.";
-		String input1 = "나는 너를 사랑한다.";
+		String input2 = "사람,사물'동물-식물-인간'";
+		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
 			String token2 = token.nextToken();
@@ -38,8 +39,7 @@ public class Main {
 				}
 			}
 			System.out.println("실험"+result);
-			}
-			
+		}
 		
 		//String token = "'사람";
 		//System.out.println(ArirangAnalyzerHandler.markRemove2(token, "'"));
