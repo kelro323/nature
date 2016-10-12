@@ -13,7 +13,7 @@ public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "사람,사물'동물-식물-인간'";
+		String input2 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -30,7 +30,7 @@ public class Main {
 			for (int i=0; i < result.size() ; i++) {
 				postProcess(result, i, result2);
 				}
-			//System.out.println("불용어 처리   : "+result2);
+			System.out.println("불용어 처리   : "+result2);
 			//System.out.println("불용어 처리   : "+result3);
 			for(int i = 0;i<result.size(); i++) {
 				
@@ -47,8 +47,8 @@ public class Main {
 	}
 	
 	/* 결과 입력 메소드 */
-	private static void addResult(int index, ArrayList<String> tempResult,
-			List<ArrayList<String>> result, List<AnalysisOutput> temp) {
+	private static void addResult(int index, List<ArrayList<String>> result, List<AnalysisOutput> temp) {
+		ArrayList<String> tempResult = new ArrayList<String>();
 		if(temp.get(index).getScore()>30) {
 			if(String.valueOf(temp.get(index).getPos()).equals("V")) {
 				tempResult.add(temp.get(index).getStem()+"다");
@@ -76,19 +76,16 @@ public class Main {
 						i++;
 					}
 					else {
-						ArrayList<String> tempResult = new ArrayList<String>();
-						addResult(i, tempResult,result, temp);
+						addResult(i, result, temp);
 						i++;
 						continue;
 					}
 				}
-				ArrayList<String> tempResult = new ArrayList<String>();
-				addResult(i, tempResult,result, temp);
+				addResult(i, result, temp);
 			}
 		}
 		else {
-			ArrayList<String> tempResult = new ArrayList<String>();
-			addResult(0, tempResult, result, temp);
+			addResult(0, result, temp);
 		}	
 	}
 	private static void checking(List<List<AnalysisOutput>> anal, List<ArrayList<String>> result) throws MorphException {

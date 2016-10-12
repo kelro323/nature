@@ -155,6 +155,11 @@ public class PostProcessUtil {
 			outList.add(index, tempList);
 		} else if(nomiJosa.contains(foreAnal.getJosa())) { 
 			// 주격 조사일때
+			// 동사의 자동사, 타동사 형도 고려하여 선택하는 part 추가 해야할듯
+			// 관형사형 어미는 이럴때 쓰임
+			// '지식이 아니라 지혜다'의 '아니'는 아니다의 쓰임새, '내가 아는 지식은'에서 '아는'은 알다의 쓰임새
+			// 같은 N+주격조사 - 동사의 형태이나 아니다는 자동사로 목적어가 필요없으므로 1번에선 아니라 선택,
+			// 2번에선 '-는'이 관형사형 어미로서 알다가 관형어로 쓰여서 '지식은'을 수식. 이런 케이스들을 고려해야할 듯
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN && !deJosa.contains(pre.getJosa())) {
 					tempList.add(pre);
@@ -411,9 +416,9 @@ public class PostProcessUtil {
 	 (N(혹은 V,Z)+히 형태로 변경)
 	 */
 	public static AnalysisOutput hiCase(AnalysisOutput anal) {
-		String temp = anal.getStem().substring(0, anal.getStem().length()-1);
-		WordEntry entry = DictionaryUtil.getWord(temp);
 		if(anal.getPatn()==PatternConstants.PTN_AID && anal.getStem().endsWith("히")) {
+			String temp = anal.getStem().substring(0, anal.getStem().length()-1);
+			WordEntry entry = DictionaryUtil.getWord(temp);
 			if(entry!=null) {
 				//조사 대신 접사에 -히를 넣어야하는데 이건 아직 추가안함.
 				//성실히 같이 XX -> XX히가 되는 것
@@ -436,8 +441,8 @@ public class PostProcessUtil {
 					//아니면 V의 속성값이 있는 새로운 카테고리를 추가해야할듯
 					output.setPosType(entry2.getFeature(WordEntry.IDX_NOUN));
 					return output;
-				} else return null;
+				} else return anal;
 			}
-		} else return null;
+		} else return anal;
 	}
 }

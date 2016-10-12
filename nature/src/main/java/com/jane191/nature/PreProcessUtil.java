@@ -37,7 +37,7 @@ public class PreProcessUtil {
 	
 	private static String remove(String token, LinkedHashSet<String> markSet) {
 		String returnValue = "";
-		Loop1 :for(String mark : markSet) {
+		External :for(String mark : markSet) {
 			returnValue = "";
 			if(token.indexOf(mark)==0) token = token.substring(1,token.length());
 			int temp1 = 0;
@@ -47,7 +47,7 @@ public class PreProcessUtil {
 				if(temp2==-1) {
 					token = returnValue + token.substring(temp1, token.length());
 					returnValue = token;
-					continue Loop1;
+					continue External;
 				}
 				if(i==0) returnValue = returnValue + token.substring(0,temp2);
 				else returnValue = returnValue + token.substring(temp1,temp2);
