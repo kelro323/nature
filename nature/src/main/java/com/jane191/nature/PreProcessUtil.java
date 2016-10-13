@@ -28,9 +28,9 @@ public class PreProcessUtil {
 			}
 		}
 		//횟수가 작은 순서대로 remove 과정을 진행하기 위해서 오름차순으로 정렬, 횟수가 많은 문장부호부터 시작하니 제대로 처리가 안됨
-		Collections.sort(markList, new numCompare());
+		Collections.sort(markList, (a,b)-> a.count<b.count ? -1: a.count>b.count ? 1:0);
 		for(MarkInfo mark : markList) {
-			markSet.add(mark.getMark());
+			markSet.add(mark.mark);
 		}
 		return markSet;
 	}
@@ -59,12 +59,6 @@ public class PreProcessUtil {
 		}
 		return returnValue;
 	}
-	//정렬 위한 Comparator
-	static class numCompare implements Comparator<MarkInfo> {
-		public int compare(MarkInfo first, MarkInfo second) {
-			return first.getCount()<second.getCount() ? -1:first.getCount()>second.getCount() ? 1:0;
-		}
-	}
 }
 
 class MarkInfo {
@@ -73,19 +67,6 @@ class MarkInfo {
 
 	MarkInfo(String mark, int count) {
 		this.mark = mark;
-		this.count = count;
-	}
-	
-	String getMark() {
-		return mark;
-	}
-	void setMark(String mark) {
-		this.mark = mark;
-	}
-	int getCount() {
-		return count;
-	}
-	void setCount(int count) {
 		this.count = count;
 	}
 }
