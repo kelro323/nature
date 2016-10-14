@@ -9,8 +9,6 @@ public class SynonymUtil {
 		if(entry==null) {
 			return new SynonymOutput("new", key, 0);
 		}
-		SynonymOutput syOutput = new SynonymOutput(entry.getCategory(), entry.getDetail(),
-				entry.getDegree());
-		return syOutput;
+		return new SynonymOutput(entry.getCategory(), entry.getDetail(), entry.getDegree());
 	}
 }

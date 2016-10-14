@@ -13,7 +13,7 @@ public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "-사람,사물,계산,실험-사랑'병원-안과'";
+		String input2 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -30,7 +30,7 @@ public class Main {
 			for (int i=0; i < result.size() ; i++) {
 				postProcess(result, i, result2);
 				}
-			System.out.println("불용어 처리   : "+result2);
+			System.out.println("불용어 처리  : "+result2);
 			//System.out.println("불용어 처리   : "+result3);
 			for(int i = 0;i<result.size(); i++) {
 				

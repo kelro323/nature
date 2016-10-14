@@ -29,14 +29,14 @@ public class SubVerbUtil {
 			for(AnalysisOutput pre : preList) {
 				if(subVerb.contains(pre.getStem()+"다") 
 						&& pre.getUsedPos()==PatternConstants.POS_VERB) {
-					String foreEomi = foreAnal.getEomi();
-					subVerbCheck(foreAnal, pre, foreEomi);
+					subVerbCheck(foreAnal, pre);
 				}
 			}
 		}
 	}
 	
-	private static void subVerbCheck(AnalysisOutput foreAnal, AnalysisOutput pre, String foreEomi) {
+	private static void subVerbCheck(AnalysisOutput foreAnal, AnalysisOutput pre) {
+		String foreEomi = foreAnal.getEomi();
 		if(pre.getStem().equals("가")) {
 			if(foreEomi.equals("어")) pre.setUsedPosType('b');
 		} else if(pre.getStem().equals("가지")) {
