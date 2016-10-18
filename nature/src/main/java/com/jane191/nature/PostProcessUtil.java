@@ -31,7 +31,7 @@ public class PostProcessUtil {
 	static {
 		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
 		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
-		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다"}; //종결 어미
+		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다","니라"}; //종결 어미
 		String[] cons = new String[] {"고","며","으며","면서","어서"}; //연결 어미
 		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
 		//관형사형 어미를 체크하는게 필요없을 가능성이 보임.
@@ -57,13 +57,13 @@ public class PostProcessUtil {
 		}
 		return true;
 	}
-	
+	/**
+	 * index-1 & index+1의 결과값을 보고 index의 결과값을 결정
+	 * ex) VM vs NJ의 경우 index-1이 N이면 VM으로 판단, V이면 NJ로 판단 함.
+	 */
 	public static void selectResults(List<List<AnalysisOutput>> outList, int index) {
-		//index-1 & index+1의 결과값을 보고 index 의 결과값을 결정.
-		//ex) VM vs NJ 의 경우 V가 타동사이고 index-1이 목적격 조사를 포함한 경우 V로 판단 하는 등.
 		AnalysisOutput foreAnal = new AnalysisOutput();
 		List<AnalysisOutput> nextList = new ArrayList<AnalysisOutput>();
-
 		if(index > 0) {
 			foreAnal = outList.get(index-1).get(0);
 		}
@@ -95,7 +95,7 @@ public class PostProcessUtil {
 				//동사 케이스
 				verbCase(foreAnal, preList, nextList, outList, index);
 			}
-		} else if(nextList!=null){
+		} else if(nextList!=null) {
 			//관형격일때
 			if(foreAnal.getUsedPos()=='A') {
 				adnomiCase(preList, nextList, outList, index);
@@ -162,6 +162,8 @@ public class PostProcessUtil {
 			// 2번에선 '-는'이 관형사형 어미로서 알다가 관형어로 쓰여서 '지식은'을 수식. 이런 케이스들을 고려해야할 듯
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN && !deJosa.contains(pre.getJosa())) {
+					tempList.add(pre);
+				} else if(pre.getEomi()!=null && endEomi.contains(pre.getEomi())) {
 					tempList.add(pre);
 				}
 			}
@@ -239,7 +241,7 @@ public class PostProcessUtil {
 					if(ne.getUsedPos()==PatternConstants.POS_VERB &&
 							(ne.getUsedPosType()=='t'||ne.getUsedPosType()=='k')) {
 						for(AnalysisOutput pre : preList) {
-							if(pre.getPos()==PatternConstants.POS_NOUN && 
+							if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
 									objJosa.contains(pre.getJosa())) {
 								tempNounList.add(pre);
 							}
@@ -267,7 +269,7 @@ public class PostProcessUtil {
 						}
 					} else if(ne.getUsedPos()==PatternConstants.POS_AID) {
 						for(AnalysisOutput pre : preList) {
-							if(pre.getPos()==PatternConstants.POS_VERB) {
+							if(pre.getUsedPos()==PatternConstants.POS_VERB) {
 								tempVerbList.add(pre);
 							}
 						}
@@ -323,13 +325,13 @@ public class PostProcessUtil {
 			if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
 				for(AnalysisOutput pre : preList) {
 					//현재가 관형사일때
-					if((pre.getPos()==PatternConstants.POS_AID&&
-							(pre.getPosType()=='d'||pre.getPosType()=='n'||pre.getPosType()=='p'))
-							||pre.getJosa().equals("의")) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외
+					if((pre.getUsedPos()==PatternConstants.POS_AID&&
+							(pre.getUsedPosType()=='d'||pre.getUsedPosType()=='n'||pre.getUsedPosType()=='p'))
+							||"의".equals(pre.getJosa())) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외
 						tempList.add(pre);
 						break;
 					//현재가 접속부사일때
-					} else if(pre.getPosType()=='c'&&pre.getPos()==PatternConstants.POS_AID) {
+					} else if(pre.getUsedPosType()=='c'&&pre.getUsedPos()==PatternConstants.POS_AID) {
 						tempList.add(pre);
 						break;
 					//현재가 단독 명사일때(고찰이 필요함)
@@ -340,8 +342,16 @@ public class PostProcessUtil {
 					}
 				}
 				outList.remove(index);
+				outList.add(index, tempList);	
+			} else if(ne.getUsedPos()==PatternConstants.POS_AID) {
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+						tempList.add(pre);
+						break;
+					}
+				}
+				outList.remove(index);
 				outList.add(index, tempList);
-				break;
 			}
 		}
 	}
@@ -397,13 +407,27 @@ public class PostProcessUtil {
 		return tempList;
 	}
 	/**
+	 * 복합명사(Analysis Score >=80)이상만 고려하기 위해서
+	 */
+	public static List<List<AnalysisOutput>> scoreSelect(List<List<AnalysisOutput>> result) {
+		List<List<AnalysisOutput>> outList = new ArrayList<List<AnalysisOutput>>();
+		for(List<AnalysisOutput> tempList : result) {
+			List<AnalysisOutput> tempResult = new ArrayList<AnalysisOutput>();
+			for(AnalysisOutput temp : tempList) {
+				if(temp.getScore()>30) tempResult.add(temp);
+			}
+			outList.add(tempResult);
+		}
+		return outList;
+	}
+	/**
 	 -기 어미에 의해서 명사형인 토큰을 찾아서 UsedPos 변경 N으로 변경
 	 (morphAnalyzer에서 변경 가능하면 그 쪽에서 하는게 이득일듯)
 	 */
 	public static List<List<AnalysisOutput>> nounEomi(List<List<AnalysisOutput>> list) {
 		for(List<AnalysisOutput> tempList : list) {
 			for(AnalysisOutput temp : tempList) {
-				if(temp.getEomi()!=null && temp.getEomi().equals("기")) {
+				if("기".equals(temp.getEomi())) {
 					temp.setUsedPos(PatternConstants.POS_NOUN);
 				}
 			}
