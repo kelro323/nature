@@ -31,7 +31,7 @@ public class PostProcessUtil {
 	static {
 		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
 		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
-		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다","니라"}; //종결 어미
+		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다","니라","다"}; //종결 어미
 		String[] cons = new String[] {"고","며","으며","면서","어서"}; //연결 어미
 		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
 		//관형사형 어미를 체크하는게 필요없을 가능성이 보임.
@@ -90,17 +90,20 @@ public class PostProcessUtil {
 		if(foreAnal.getScore()> AnalysisOutput.SCORE_FAIL && nextList!=null) {
 			if(foreAnal.getUsedPos()==PatternConstants.POS_NOUN) {
 				//명사 케이스
-				nounCase(foreAnal, preList, nextList, index, outList);
+				nounCase(foreAnal, preList, nextList, outList, index);
 			} else if(foreAnal.getUsedPos()==PatternConstants.POS_VERB) {
 				//동사 케이스
 				verbCase(foreAnal, preList, nextList, outList, index);
+			} else if(foreAnal.getUsedPos()==PatternConstants.POS_AID) {
+				//부사 케이스
+				busaCase(foreAnal, preList, nextList, outList, index);
 			}
 		} else if(nextList!=null) {
 			//관형격일때
 			if(foreAnal.getUsedPos()=='A') {
 				adnomiCase(preList, nextList, outList, index);
 			} else { //처음일때
-				firstCase(preList, nextList, index, outList);
+				firstCase(preList, nextList, outList, index);
 			}
 		} else {
 			//마지먁일때
@@ -116,7 +119,7 @@ public class PostProcessUtil {
 	
 	//앞의 토큰이 명사 사용일때
 	private static void nounCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList, List<AnalysisOutput> nextList,
-			int index, List<List<AnalysisOutput>> outList) {
+			List<List<AnalysisOutput>> outList, int index) {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 		//조사가 존재하고, 그 조사가 주격 조사나 서술격 조사가 아닐때
 		if(foreAnal.getJosa()!=null 
@@ -150,9 +153,8 @@ public class PostProcessUtil {
 				if(detBusa) tempList = tempBusaList;
 				else tempList = tempVerbList;
 			} else tempList = preList;
-			removeSame(tempList);
 			outList.remove(index);
-			outList.add(index, tempList);
+			outList.add(index, removeSame(tempList));
 		} else if(nomiJosa.contains(foreAnal.getJosa())) { 
 			// 주격 조사일때
 			// 동사의 자동사, 타동사 형도 고려하여 선택하는 part 추가 해야할듯
@@ -214,9 +216,8 @@ public class PostProcessUtil {
 				if(detBusa) tempList = tempBusaList;
 				else tempList = tempVerbList;
 			} else tempList = preList;
-			removeSame(tempList);
 			outList.remove(index);
-			outList.add(index, tempList);
+			outList.add(index, removeSame(tempList));
 		} else {
 			// 조사가 없을때
 			for(AnalysisOutput pre : preList) {
@@ -311,15 +312,35 @@ public class PostProcessUtil {
 			}
 			//어떤 List를 선택해야 하는 것에 대한 건 고민이 필요함
 			outList.remove(index);
-			removeSame(tempNounList);
-			removeSame(tempVerbList);
-			if(tempNounList.size() >= tempVerbList.size()) outList.add(index, tempNounList);
-			else outList.add(index, tempVerbList);
+			if(tempNounList.size() >= tempVerbList.size()) outList.add(index, removeSame(tempNounList));
+			else outList.add(index, removeSame(tempVerbList));
 		}
 	}
 	
-	private static void firstCase(List<AnalysisOutput> preList, List<AnalysisOutput> nextList, int index
-			, List<List<AnalysisOutput>>outList) {
+	private static void busaCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList,
+			List<AnalysisOutput> nextList, List<List<AnalysisOutput>> outList, int index) {
+		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
+		for(AnalysisOutput ne : nextList) {
+			if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+						tempList.add(pre);
+					}
+				}
+			} else if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+						tempList.add(pre);
+					}
+				}
+			}
+		}
+		outList.remove(index);
+		outList.add(index, removeSame(tempList));
+	}
+	
+	private static void firstCase(List<AnalysisOutput> preList, List<AnalysisOutput> nextList,
+			List<List<AnalysisOutput>>outList , int index) {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 		for(AnalysisOutput ne : nextList) {
 			if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
@@ -329,31 +350,33 @@ public class PostProcessUtil {
 							(pre.getUsedPosType()=='d'||pre.getUsedPosType()=='n'||pre.getUsedPosType()=='p'))
 							||"의".equals(pre.getJosa())) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외
 						tempList.add(pre);
-						break;
 					//현재가 접속부사일때
 					} else if(pre.getUsedPosType()=='c'&&pre.getUsedPos()==PatternConstants.POS_AID) {
 						tempList.add(pre);
-						break;
 					//현재가 단독 명사일때(고찰이 필요함)
 					} else if(pre.getUsedPos()==PatternConstants.POS_NOUN &&
 							pre.getPatn()==PatternConstants.PTN_N) {
 						tempList.add(pre);
-						break;
 					}
 				}
-				outList.remove(index);
-				outList.add(index, tempList);	
 			} else if(ne.getUsedPos()==PatternConstants.POS_AID) {
 				for(AnalysisOutput pre : preList) {
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 						tempList.add(pre);
-						break;
 					}
 				}
-				outList.remove(index);
-				outList.add(index, tempList);
+			} else if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPos()==PatternConstants.POS_NOUN && nomiJosa.contains(pre.getJosa())) {
+						tempList.add(pre);
+					} else if(pre.getUsedPos()==PatternConstants.POS_AID) {
+						tempList.add(pre);
+					}
+				}
 			}
 		}
+		outList.remove(index);
+		outList.add(index, removeSame(tempList));
 	}
 	
 	private static void lastCase(List<AnalysisOutput> preList, List<List<AnalysisOutput>>outList,
@@ -361,7 +384,7 @@ public class PostProcessUtil {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 		for(AnalysisOutput pre : preList) {
 			if(endEomi.contains(pre.getEomi())
-					||pre.getJosa().equals("이다")||pre.getJosa().equals("이지")) {
+					||"이다".equals(pre.getJosa())||"이지".equals(pre.getJosa())) {
 				//이다 의 경우 보조동사가 뒤에 오면 종결 어미가 아니므로 고려해야하는가...
 				tempList.add(pre);
 			}
@@ -396,15 +419,12 @@ public class PostProcessUtil {
 				}
 			}
 		}
-		removeSame(tempList);
 		outList.remove(index);
-		outList.add(index, tempList);
+		outList.add(index, removeSame(tempList));
 	}
 	
 	private static List<AnalysisOutput> removeSame(List<AnalysisOutput> list) {
-		List<AnalysisOutput> tempList = 
-				new ArrayList<AnalysisOutput>(new LinkedHashSet<AnalysisOutput>(list));
-		return tempList;
+		return new ArrayList<AnalysisOutput>(new LinkedHashSet<AnalysisOutput>(list));
 	}
 	/**
 	 * 복합명사(Analysis Score >=80)이상만 고려하기 위해서
