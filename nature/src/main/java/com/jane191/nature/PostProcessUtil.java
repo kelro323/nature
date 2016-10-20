@@ -103,7 +103,6 @@ public class PostProcessUtil {
 			if(foreAnal.getUsedPos()=='A') {
 				adnomiCase(preList, nextList, outList, index);
 			} else { //처음일때
-				System.out.println("zic");
 				firstCase(preList, nextList, outList, index);
 			}
 		} else {
@@ -164,9 +163,11 @@ public class PostProcessUtil {
 			// 같은 N+주격조사 - 동사의 형태이나 아니다는 자동사로 목적어가 필요없으므로 1번에선 아니라 선택,
 			// 2번에선 '-는'이 관형사형 어미로서 알다가 관형어로 쓰여서 '지식은'을 수식. 이런 케이스들을 고려해야할 듯
 			for(AnalysisOutput pre : preList) {
-				if(pre.getUsedPos()==PatternConstants.POS_NOUN && !deJosa.contains(pre.getJosa())) {
+				if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
+						(!deJosa.contains(pre.getJosa())&&!objJosa.contains(pre.getJosa())&&pre.getPatn()!=PatternConstants.PTN_N)) {
 					tempList.add(pre);
-				} else if(pre.getEomi()!=null && endEomi.contains(pre.getEomi())) {
+				} else if(pre.getEomi()!=null && 
+						(!endEomi.contains(pre.getEomi())&&!"기".equals(pre.getEomi()))) {
 					tempList.add(pre);
 				}
 			}
@@ -357,6 +358,9 @@ public class PostProcessUtil {
 					//현재가 단독 명사일때(고찰이 필요함)
 					} else if(pre.getUsedPos()==PatternConstants.POS_NOUN &&
 							pre.getPatn()==PatternConstants.PTN_N) {
+						tempList.add(pre);
+					} else if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
+							nomiJosa.contains(pre.getJosa())) {
 						tempList.add(pre);
 					}
 				}

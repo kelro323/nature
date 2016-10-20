@@ -1,19 +1,17 @@
 package com.jane191.nature;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.lucene.analysis.ko.morph.AnalysisOutput;
 import org.apache.lucene.analysis.ko.morph.MorphException;
-import org.apache.lucene.analysis.ko.morph.PatternConstants;
 
 public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "싫어하는";
+		String input2 = "내가 먹기 싫어함을 것은 아니다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -23,7 +21,7 @@ public class Main {
 			System.out.println("형태소 분석 : " +result);
 			result = PostProcessUtil.scoreSelect(result);
 			System.out.println("스코어 분류 : " +result);
-			//result = PostProcessUtil.nounEomi(result);
+			result = PostProcessUtil.nounEomi(result);
 			for(int i = 0;i<result.size(); i++) {
 				if(result.get(i).size()>1) {
 					PostProcessUtil.selectResults(result, i);
