@@ -103,6 +103,7 @@ public class PostProcessUtil {
 			if(foreAnal.getUsedPos()=='A') {
 				adnomiCase(preList, nextList, outList, index);
 			} else { //처음일때
+				System.out.println("zic");
 				firstCase(preList, nextList, outList, index);
 			}
 		} else {
@@ -427,16 +428,22 @@ public class PostProcessUtil {
 		return new ArrayList<AnalysisOutput>(new LinkedHashSet<AnalysisOutput>(list));
 	}
 	/**
-	 * 복합명사(Analysis Score >=80)이상만 고려하기 위해서
+	 * Analysis Score 80점 이상만 고려하기 위해서
+	 * 만약 결과값이 다 80점 아래라면 그대로 출력
 	 */
 	public static List<List<AnalysisOutput>> scoreSelect(List<List<AnalysisOutput>> result) {
 		List<List<AnalysisOutput>> outList = new ArrayList<List<AnalysisOutput>>();
 		for(List<AnalysisOutput> tempList : result) {
 			List<AnalysisOutput> tempResult = new ArrayList<AnalysisOutput>();
+			int count = 0;
 			for(AnalysisOutput temp : tempList) {
-				if(temp.getScore()>30) tempResult.add(temp);
+				if(temp.getScore()>30)  {
+					tempResult.add(temp);
+					count++;
+				}
 			}
-			outList.add(tempResult);
+			if(count>0) outList.add(tempResult);
+			else outList.add(tempList);
 		}
 		return outList;
 	}
