@@ -1,6 +1,5 @@
 package com.jane191.nature;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -11,7 +10,7 @@ public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "내가 먹기 싫어함을 것은 아니다.";
+		String input2 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
