@@ -166,9 +166,16 @@ public class PostProcessUtil {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
 						(!deJosa.contains(pre.getJosa())&&!objJosa.contains(pre.getJosa())&&pre.getPatn()!=PatternConstants.PTN_N)) {
 					tempList.add(pre);
-				} else if(pre.getEomi()!=null && 
-						(!endEomi.contains(pre.getEomi())&&!"기".equals(pre.getEomi()))) {
-					tempList.add(pre);
+				} else if(pre.getEomi()!=null) {
+					if(index != outList.size()-1) {
+						if(endEomi.contains(pre.getEomi())) {
+							tempList.add(pre);
+						}
+					} else {
+						if(!"기".equals(pre.getEomi())) {
+							tempList.add(pre);
+						}
+					}
 				}
 			}
 			for(AnalysisOutput temp : tempList) {
