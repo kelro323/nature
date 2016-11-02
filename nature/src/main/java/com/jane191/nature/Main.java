@@ -10,7 +10,7 @@ public class Main {
 	public static void main(String[] args) throws MorphException {
 		
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
-		String input2 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
+		String input2 = "자장면을 먹어 보다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -21,6 +21,9 @@ public class Main {
 			result = PostProcessUtil.scoreSelect(result);
 			System.out.println("스코어 분류 : " +result);
 			result = PostProcessUtil.nounEomi(result);
+			for(int i = 0; i<result.size(); i++) {
+				SubVerbUtil.determinSubVerb(result, i);
+			}
 			for(int i = 0;i<result.size(); i++) {
 				if(result.get(i).size()>1) {
 					PostProcessUtil.selectResults(result, i);

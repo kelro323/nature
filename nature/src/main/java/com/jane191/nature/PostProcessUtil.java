@@ -301,22 +301,41 @@ public class PostProcessUtil {
 				for(AnalysisOutput pre : preList) {
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 						tempNounList.add(pre);
-					} else if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+					} 
+					/*
+					else if(pre.getUsedPos()==PatternConstants.POS_VERB) {
 						if(foreAnal.getEomi().equals("고")) {
 							tempVerbList.add(pre);
 						}
-					}
+					}*/
 				}
 			} else if(conEomi.contains(foreAnal.getEomi())) {
 				//연결 어미일 경우 둘다 가능해서 아직 정하지 못해 그냥 다 tempList에 넣는걸로 함.
-				for(AnalysisOutput pre : preList) {
-					tempNounList.add(pre);
+				//연결 어미가 "고"의 경우 보조 동사의 앞에 오는 동사형태에서 종종 보이므로, 이 경우 현재 토큰이 보조동사 인지 확인하고
+				//보조 동사가 있는지 확인되면 바로 루프문 종료, 보조동사 결과값만을 나타내기로 함
+				if("고".equals(foreAnal.getEomi())) {
+					for(AnalysisOutput pre : preList) {
+						if(pre.getUsedPos()==PatternConstants.POS_VERB && pre.getUsedPosType()=='b') {
+							tempVerbList.add(pre);
+							break;
+						} else {
+							tempNounList.add(pre);
+						}
+					}
+				} else {
+					for(AnalysisOutput pre : preList) {
+						tempNounList.add(pre);
+					}
 				}
 			} else {
 				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPosType()=='b') {
+						tempVerbList.add(pre);
+						break;
+					}
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 						tempNounList.add(pre);
-					}
+					} 
 				}
 			}
 			//어떤 List를 선택해야 하는 것에 대한 건 고민이 필요함
