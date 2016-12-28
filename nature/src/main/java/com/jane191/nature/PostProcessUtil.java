@@ -11,22 +11,33 @@ import org.apache.lucene.analysis.ko.morph.WordEntry;
 import org.apache.lucene.analysis.ko.utils.DictionaryUtil;
 
 public class PostProcessUtil {
-	/** 주격 조사 */
+	/** 주격 조사 :
+	 * "이","가","께서","에서","은","는","도","만" */
 	private static final HashSet<String> nomiJosa = new HashSet<String>();
-	/** 목적격 조사	 */
+	/** 목적격 조사	 :
+	 * "을","를","은","는","도","만" */
 	private static final HashSet<String> objJosa = new HashSet<String>();
-	/** 종결 어미 */
+	/** 종결 어미 :
+	 *  "ㄴ다","는다","ㅂ니다","습니다","니라","다"*/
 	private static final HashSet<String> endEomi = new HashSet<String>();
-	/** 연결 어미 */
+	/** 연결 어미 :
+	 * "고","며","으며","면서","어서"*/
 	private static final HashSet<String> conEomi = new HashSet<String>();
-	/** 관형사형 어미*/
+	/** 관형사형 어미 :
+	 * "는","은","ㄴ","을","ㄹ","던"*/
 	private static final HashSet<String> adnomiEomi = new HashSet<String>();
-	/** 부사격 조사 */
+	/** 부사격 조사 :
+	 * "에","에서","에게","와","과","으로","로" */
 	private static final HashSet<String> busaJosa = new HashSet<String>();
-	/** 부사형 어미 */
+	/** 부사형 어미 :
+	 * "도록", "게"*/
 	private static final HashSet<String> busaEomi = new HashSet<String>();
-	/** 서술격 조사 */
+	/** 서술격 조사 :
+	 * "이다", "이면", "이고", "이니", "이지"*/
 	private static final HashSet<String> deJosa = new HashSet<String>();
+	/** Vnj와 NJ 같은 의미인 경우 : 돕+ㅁ & 도움 // 그리+ㅁ & 그림
+	 */
+	private static final HashSet<String> sameMean = new HashSet<String>();
 	
 	static {
 		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
@@ -39,6 +50,8 @@ public class PostProcessUtil {
 		String[] busae = new String[] {"도록", "게"}; //부사형 어미
 		String[] dej = new String[] {"이다", "이면", "이고", "이니", "이지"}; //서술격 조사
 		
+		String[] same = new String[] {"도움", "그림"}; // 같은 의미
+		
 		addList(nomiJosa,nomis);
 		addList(objJosa,objs);
 		addList(endEomi,ends);
@@ -47,15 +60,26 @@ public class PostProcessUtil {
 		addList(busaJosa,busaj);
 		addList(busaEomi,busae);
 		addList(deJosa, dej);
+		addList(sameMean, same);
 	};
 	
-	public static boolean removeAdnomi(List<List<AnalysisOutput>> outList) {
+	public static void noDicCase(List<List<AnalysisOutput>> outList) {
 		for(int i=0; i<outList.size(); i++) {
-			for(AnalysisOutput o : outList.get(i)) {
+			if(outList.get(i).size()>1) {
+				List<AnalysisOutput> preList = outList.get(i);
+				int count = 0;
+				for(AnalysisOutput pre : preList) {
+					if(pre.getUsedPosType() == '@') count += 1;
+				}
+				if(count == preList.size()) {
+					List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
+					outList.remove(i);
+					tempList.add(preList.get(0));
+					outList.add(i, tempList);
+				}
 				
 			}
 		}
-		return true;
 	}
 	/**
 	 * index-1 & index+1의 결과값을 보고 index의 결과값을 결정
@@ -65,13 +89,14 @@ public class PostProcessUtil {
 		AnalysisOutput foreAnal = new AnalysisOutput();
 		List<AnalysisOutput> nextList = new ArrayList<AnalysisOutput>();
 		if(index > 0) {
+			System.out.println(outList.get(index).get(0));
 			foreAnal = outList.get(index-1).get(0);
 		}
 		if(index < outList.size()-1) {
 			nextList = outList.get(index+1);
 		}
 		//관형사 체크를 위한 어미, 관형사형 조사는 "의" 밖에 없으므로 따로
-		if(foreAnal.getJosa()!=null&&foreAnal.getJosa().equals("의")) {
+		if(foreAnal.getJosa()!=null&&(foreAnal.getJosa().equals("의")||foreAnal.getJosa().equals("들의"))) {
 			if(index>1) foreAnal = outList.get(index-2).get(0);
 			else {
 				foreAnal.setUsedPos('A');
@@ -87,8 +112,29 @@ public class PostProcessUtil {
 			}
 		}*/
 		List<AnalysisOutput> preList = outList.get(index);
+		if(sameMeaning(preList) != 0) {
+			if(sameMeaning(preList) == 1) {
+				preList.remove(0);
+				outList.remove(index);
+				outList.add(index, preList);
+			} else {
+				preList.remove(1);
+				outList.remove(index);
+				outList.add(index, preList);
+			}
+			return;
+		}
 		if(foreAnal.getScore()> AnalysisOutput.SCORE_FAIL && nextList!=null) {
 			if(foreAnal.getUsedPos()==PatternConstants.POS_NOUN) {
+				for(AnalysisOutput pre : preList) {
+					if(pre.getStem().equals("토대") && pre.getUsedPos()==PatternConstants.POS_NOUN) {
+						outList.remove(index);
+						List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
+						tempList.add(pre);
+						outList.add(index, tempList);
+						return;
+					}
+				}
 				//명사 케이스
 				nounCase(foreAnal, preList, nextList, outList, index);
 			} else if(foreAnal.getUsedPos()==PatternConstants.POS_VERB) {
@@ -136,6 +182,7 @@ public class PostProcessUtil {
 			if(preList.size()>1) {
 				boolean detBusa = false;
 				for(AnalysisOutput ne : nextList) {
+					if(ne.getUsedPos()==PatternConstants.POS_NOUN) break;
 					if(ne.getUsedPos()==PatternConstants.POS_VERB) {
 						//의존 명사에 의한 '것이다' '곳이다' 등등에 대한 거에 대한 고찰 필요.
 						if(!busaEomi.contains(ne.getEomi()) && !endEomi.contains(ne.getEomi())) {
@@ -248,33 +295,33 @@ public class PostProcessUtil {
 				//뒤에 명사형, 동사형 둘 다 올 수도 있는 상황. 뒤에 구절이 타동사로 이루어지면 목적어가 들어와 명사형이 나타나고
 				//자동사인 경우 바로 동사형이 선택.
 				for(AnalysisOutput ne : nextList) {
-					if(ne.getUsedPos()==PatternConstants.POS_VERB &&
-							(ne.getUsedPosType()=='t'||ne.getUsedPosType()=='k')) {
-						for(AnalysisOutput pre : preList) {
-							if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
-									objJosa.contains(pre.getJosa())) {
-								tempNounList.add(pre);
+					if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+						if(ne.getUsedPosType()=='t' || ne.getUsedPosType()=='k') {
+							for(AnalysisOutput pre : preList) {
+								if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
+										objJosa.contains(pre.getJosa())) {
+									tempNounList.add(pre);
+								}
 							}
-						}
-					} else if(ne.getUsedPos()==PatternConstants.POS_VERB &&
-							(ne.getUsedPosType()=='i'||ne.getUsedPosType()=='d')) {
-						for(AnalysisOutput pre : preList) {
-							if(pre.getUsedPos()==PatternConstants.POS_AID) {
-								tempVerbList.add(pre);
+						} else if(ne.getUsedPosType()=='i' || ne.getUsedPosType()=='d') {
+							for(AnalysisOutput pre : preList) {
+								if(pre.getUsedPos()==PatternConstants.POS_AID) {
+									tempVerbList.add(pre);
+								}
 							}
-						}
-					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getUsedPosType()=='v') {
-						for(AnalysisOutput pre : preList) {
-							if(pre.getUsedPos()==PatternConstants.POS_NOUN && objJosa.contains(pre.getJosa())) {
-								tempNounList.add(pre);
-							} else if(pre.getUsedPos()==PatternConstants.POS_AID) {
-								tempVerbList.add(pre);
+						} else if(ne.getUsedPosType()=='v') {
+							for(AnalysisOutput pre : preList) {
+								if(pre.getUsedPos()==PatternConstants.POS_NOUN && objJosa.contains(pre.getJosa())) {
+									tempNounList.add(pre);
+								} else if(pre.getUsedPos()==PatternConstants.POS_AID) {
+									tempVerbList.add(pre);
+								}
 							}
-						}
-					} else if(ne.getUsedPos()==PatternConstants.POS_VERB && ne.getUsedPosType()=='b') {
-						for(AnalysisOutput pre : preList) {
-							if(pre.getUsedPos()==PatternConstants.POS_VERB) {
-								tempVerbList.add(pre);
+						} else if(ne.getUsedPosType()=='b') {
+							for(AnalysisOutput pre : preList) {
+								if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+									tempVerbList.add(pre);
+								}
 							}
 						}
 					} else if(ne.getUsedPos()==PatternConstants.POS_AID) {
@@ -297,18 +344,17 @@ public class PostProcessUtil {
 						}
 					}
 				}
-			} else if(foreAnal.getUsedPosType()=='b') { //보조 동사 파트
+			} else if(foreAnal.getUsedPosType()=='b') {
+				//보조 동사 파트
 				for(AnalysisOutput pre : preList) {
-					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+					if(pre.getUsedPos()==PatternConstants.POS_VERB && pre.getUsedPosType()=='b') {
+						tempVerbList.add(pre);
+					}
+					else if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 						tempNounList.add(pre);
 					} 
-					/*
-					else if(pre.getUsedPos()==PatternConstants.POS_VERB) {
-						if(foreAnal.getEomi().equals("고")) {
-							tempVerbList.add(pre);
-						}
-					}*/
 				}
+				
 			} else if(conEomi.contains(foreAnal.getEomi())) {
 				//연결 어미일 경우 둘다 가능해서 아직 정하지 못해 그냥 다 tempList에 넣는걸로 함.
 				//연결 어미가 "고"의 경우 보조 동사의 앞에 오는 동사형태에서 종종 보이므로, 이 경우 현재 토큰이 보조동사 인지 확인하고
@@ -329,7 +375,7 @@ public class PostProcessUtil {
 				}
 			} else {
 				for(AnalysisOutput pre : preList) {
-					if(pre.getUsedPosType()=='b') {
+					if(pre.getUsedPos()==PatternConstants.POS_VERB && pre.getUsedPosType()=='b') {
 						tempVerbList.add(pre);
 						break;
 					}
@@ -375,8 +421,8 @@ public class PostProcessUtil {
 				for(AnalysisOutput pre : preList) {
 					//현재가 관형사일때
 					if((pre.getUsedPos()==PatternConstants.POS_AID&&
-							(pre.getUsedPosType()=='d'||pre.getUsedPosType()=='n'||pre.getUsedPosType()=='p'))
-							||"의".equals(pre.getJosa())) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외
+							(pre.getUsedPosType()=='d'||pre.getUsedPosType()=='n'||pre.getUsedPosType()=='p')||pre.getUsedPosType()=='1')
+							||"의".equals(pre.getJosa())) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외 //postype 미 완료로 1 추가
 						tempList.add(pre);
 					//현재가 접속부사일때
 					} else if(pre.getUsedPosType()=='c'&&pre.getUsedPos()==PatternConstants.POS_AID) {
@@ -397,13 +443,23 @@ public class PostProcessUtil {
 					}
 				}
 			} else if(ne.getUsedPos()==PatternConstants.POS_VERB) {
-				for(AnalysisOutput pre : preList) {
-					if(pre.getUsedPos()==PatternConstants.POS_NOUN && nomiJosa.contains(pre.getJosa())) {
-						tempList.add(pre);
-					} else if(pre.getUsedPos()==PatternConstants.POS_AID) {
-						tempList.add(pre);
+				if(ne.getStem().equals("위하")) {
+					for(AnalysisOutput pre : preList) {
+						if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
+								(pre.getJosa().equals("을")||pre.getJosa().equals("를"))) {
+							tempList.add(pre);
+						}
+					}
+				} else {
+					for(AnalysisOutput pre : preList) {
+						if(pre.getUsedPos()==PatternConstants.POS_NOUN && nomiJosa.contains(pre.getJosa())) {
+							tempList.add(pre);
+						} else if(pre.getUsedPos()==PatternConstants.POS_AID) {
+							tempList.add(pre);
+						}
 					}
 				}
+				
 			}
 		}
 		outList.remove(index);
@@ -457,6 +513,17 @@ public class PostProcessUtil {
 	private static List<AnalysisOutput> removeSame(List<AnalysisOutput> list) {
 		return new ArrayList<AnalysisOutput>(new LinkedHashSet<AnalysisOutput>(list));
 	}
+	
+	private static int sameMeaning(List<AnalysisOutput> preList) {
+		int count = 0;
+		for(AnalysisOutput pre : preList) {
+			if(sameMean.contains(pre.getStem())) return 1;
+			if(pre.getUsedPos()==PatternConstants.POS_AID && 
+					pre.getScore()==AnalysisOutput.SCORE_CORRECT) count += 1;
+		}
+		if(count== preList.size()) return 2;
+		return 0;
+	}
 	/**
 	 * Analysis Score 80점 이상만 고려하기 위해서
 	 * 만약 결과값이 다 80점 아래라면 그대로 출력
@@ -485,7 +552,9 @@ public class PostProcessUtil {
 		for(List<AnalysisOutput> tempList : list) {
 			for(AnalysisOutput temp : tempList) {
 				if("기".equals(temp.getEomi())) {
-					temp.setUsedPos(PatternConstants.POS_NOUN);
+					if(!"보".equals(temp.getStem())) {
+						temp.setUsedPos(PatternConstants.POS_NOUN);
+					}	
 				}
 			}
 		}
@@ -509,7 +578,7 @@ public class PostProcessUtil {
 				output.setUsedPos(PatternConstants.POS_AID);
 				output.setPosType(entry.getFeature(WordEntry.IDX_NOUN));
 				return output;
-			} else {
+			} else { 
 				//부단히 같이 XX하다 -> XX히의 형태로 부사형이 되는 것
 				WordEntry entry2 = DictionaryUtil.getWord(temp+"하");
 				if(entry2!=null) {

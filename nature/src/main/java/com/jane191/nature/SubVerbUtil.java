@@ -104,9 +104,10 @@ public class SubVerbUtil {
 			else if(foreEomi.equals("으려")||foreEomi.equals("려")
 					||foreEomi.equals("으려고")||foreEomi.equals("려고")||foreEomi.equals("고자")) {
 				pre.setUsedPosType('b');
-			} else if((foreEomi.equals("는")||foreEomi.equals("도")||foreEomi.equals("나"))
-					&& foreAnal.getElist().get(0).equals("기")) {
-				pre.setUsedPosType('b');
+			} else if((foreEomi.equals("는")||foreEomi.equals("도")||foreEomi.equals("나"))) {
+				if(foreAnal.getElist().size() > 0) {
+					if("기".equals(foreAnal.getElist().get(0))) pre.setUsedPosType('b');
+				}
 			} else if(foreEomi.equals("고")) {
 				if(pre.getEomi().equals("어서")||pre.getEomi().equals("어")||pre.getEomi().equals("니")) {
 					pre.setUsedPosType('b');
