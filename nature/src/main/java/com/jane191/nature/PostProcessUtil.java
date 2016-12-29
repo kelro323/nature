@@ -50,7 +50,7 @@ public class PostProcessUtil {
 		String[] conj = new String[] {"과", "와"}; //연결 조사
 		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
 		//관형사형 어미를 체크하는게 필요없을 가능성이 보임.
-		String[] busaj = new String[] {"에","에서","에게","와","과","으로","로"}; //부사격 조사
+		String[] busaj = new String[] {"에","에서","에게","와","과","으로","로","보다"}; //부사격 조사
 		String[] busae = new String[] {"도록", "게"}; //부사형 어미
 		String[] dej = new String[] {"이다", "이면", "이고", "이니", "이지"}; //서술격 조사
 		
@@ -74,11 +74,7 @@ public class PostProcessUtil {
 				List<AnalysisOutput> preList = outList.get(i);
 				int count = 0;
 				for(AnalysisOutput pre : preList) {
-					System.out.println(pre);
-					System.out.println(pre.getUsedPosType());
-					if(pre.getUsedPosType() == '@') {
-						count += 1;
-					}
+					if(pre.getUsedPosType() == '@') count += 1;
 				}
 				if(count == preList.size()) {
 					List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
@@ -314,7 +310,7 @@ public class PostProcessUtil {
 				}
 				if(pre.getUsedPos()==PatternConstants.POS_AID) {
 					for(AnalysisOutput ne : nextList) {
-						if(ne.getPatn()==PatternConstants.PTN_N) {
+						if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
 							tempList.add(pre);
 						}
 					}
@@ -389,7 +385,7 @@ public class PostProcessUtil {
 					if(pre.getUsedPos()==PatternConstants.POS_VERB && pre.getUsedPosType()=='b') {
 						tempVerbList.add(pre);
 					}
-					else if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+					else if(pre.getUsedPos()==PatternConstants.POS_NOUN || pre.getUsedPos()==PatternConstants.POS_AID) {
 						tempNounList.add(pre);
 					} 
 				}
@@ -503,7 +499,8 @@ public class PostProcessUtil {
 							tempList.add(pre);
 						}
 					}
-				} else if(ne.getStem().equals("관련")||ne.getStem().equals("관하")||ne.getStem().equals("대하")) {
+				} else if(ne.getStem().equals("관련")||ne.getStem().equals("관하")||
+						ne.getStem().equals("대하")||ne.getStem().equals("맞물리")) {
 					for(AnalysisOutput pre : preList) {
 						if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
 								("와".equals(pre.getJosa())||"에".equals(pre.getJosa())||"과".equals(pre.getJosa()))) {

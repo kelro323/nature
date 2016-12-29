@@ -14,7 +14,7 @@ public class Main {
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
 		/*
 		BufferedReader br = 
-				new BufferedReader(new FileReader("C:\\Users\\Seungwoo\\PycharmProjects\\postProcessAbstract\\edit\\abstract2.txt"));
+				new BufferedReader(new FileReader("C:\\Users\\Seungwoo\\PycharmProjects\\postProcessAbstract\\edit\\abstract3.txt"));
 		while(true) {
 			String line = br.readLine();
 			if(line==null) break;
@@ -40,7 +40,7 @@ public class Main {
 		}
 		*/
 		
-		String input2 = "이러한 시도들은 대개 혈연에서 출신고향, 그리고 학연이라고 불리는 동창의 연줄망이 도시민의 사회관계를 지배하고 있음을 보여주고 있다.";
+		String input2 = "그 결과 첫째, 사회참여와 주관적 건강의 초기값과의 상관은 사회참여의 종류에 따라 달라짐을 확인하였다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -54,8 +54,8 @@ public class Main {
 			for(int i = 0; i<result.size(); i++) {
 				SubVerbUtil.determinSubVerb(result, i);
 			}
-			System.out.println(result);
 			PostProcessUtil.noDicCase(result);
+			System.out.println(result);
 			for(int i = 0;i<result.size(); i++) {
 				if(result.get(i).size()>1) {
 					PostProcessUtil.selectResults(result, i);
