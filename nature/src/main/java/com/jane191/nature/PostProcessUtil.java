@@ -23,6 +23,9 @@ public class PostProcessUtil {
 	/** 연결 어미 :
 	 * "고","며","으며","면서","어서"*/
 	private static final HashSet<String> conEomi = new HashSet<String>();
+	/** 연결 조사 :
+	 * "과", "와"*/
+	private static final HashSet<String> conJosa = new HashSet<String>();
 	/** 관형사형 어미 :
 	 * "는","은","ㄴ","을","ㄹ","던"*/
 	private static final HashSet<String> adnomiEomi = new HashSet<String>();
@@ -43,7 +46,8 @@ public class PostProcessUtil {
 		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
 		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
 		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다","니라","다"}; //종결 어미
-		String[] cons = new String[] {"고","며","으며","면서","어서"}; //연결 어미
+		String[] cone = new String[] {"고","며","으며","면서","어서"}; //연결 어미
+		String[] conj = new String[] {"과", "와"}; //연결 조사
 		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
 		//관형사형 어미를 체크하는게 필요없을 가능성이 보임.
 		String[] busaj = new String[] {"에","에서","에게","와","과","으로","로"}; //부사격 조사
@@ -55,7 +59,8 @@ public class PostProcessUtil {
 		addList(nomiJosa,nomis);
 		addList(objJosa,objs);
 		addList(endEomi,ends);
-		addList(conEomi,cons);
+		addList(conEomi,cone);
+		addList(conJosa,conj);
 		addList(adnomiEomi,adnomis);
 		addList(busaJosa,busaj);
 		addList(busaEomi,busae);
@@ -89,6 +94,7 @@ public class PostProcessUtil {
 		AnalysisOutput foreAnal = new AnalysisOutput();
 		List<AnalysisOutput> nextList = new ArrayList<AnalysisOutput>();
 		if(index > 0) {
+			System.out.println(outList.get(index-1));
 			System.out.println(outList.get(index).get(0));
 			foreAnal = outList.get(index-1).get(0);
 		}
@@ -169,7 +175,7 @@ public class PostProcessUtil {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 		//조사가 존재하고, 그 조사가 주격 조사나 서술격 조사가 아닐때
 		if(foreAnal.getJosa()!=null 
-				&& !(nomiJosa.contains(foreAnal.getJosa())||deJosa.contains(foreAnal.getJosa()))) {
+				&& !(nomiJosa.contains(foreAnal.getJosa())||deJosa.contains(foreAnal.getJosa())||conJosa.contains(foreAnal.getJosa()))) {
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
@@ -185,7 +191,8 @@ public class PostProcessUtil {
 					if(ne.getUsedPos()==PatternConstants.POS_NOUN) break;
 					if(ne.getUsedPos()==PatternConstants.POS_VERB) {
 						//의존 명사에 의한 '것이다' '곳이다' 등등에 대한 거에 대한 고찰 필요.
-						if(!busaEomi.contains(ne.getEomi()) && !endEomi.contains(ne.getEomi())) {
+						if(!busaEomi.contains(ne.getEomi()) && 
+								!endEomi.contains(ne.getEomi()) && !adnomiEomi.contains(ne.getEomi())) {
 							detBusa = true;
 						}
 					}
@@ -242,6 +249,19 @@ public class PostProcessUtil {
 			}
 			outList.remove(index);
 			outList.add(index, preList);
+		} else if(conJosa.contains(foreAnal.getJosa())) {
+			// 연결 조사일때 
+			for(AnalysisOutput pre : preList) {
+				if("함께".equals(pre.getStem()) && pre.getUsedPos()==PatternConstants.POS_AID) {
+					tempList.add(pre);
+					break;
+				}
+				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+					tempList.add(pre);
+				}
+			}
+			outList.remove(index);
+			outList.add(index, removeSame(tempList));
 		} else if(foreAnal.getEomi()!=null) {
 			//-기 어미에 의해서 명사형으로 취급될때
 			for(AnalysisOutput pre : preList) {
@@ -279,6 +299,13 @@ public class PostProcessUtil {
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
+				}
+				if(pre.getUsedPos()==PatternConstants.POS_AID) {
+					for(AnalysisOutput ne : nextList) {
+						if(ne.getPatn()==PatternConstants.PTN_N) {
+							tempList.add(pre);
+						}
+					}
 				}
 			}
 			outList.remove(index);
@@ -379,6 +406,10 @@ public class PostProcessUtil {
 						tempVerbList.add(pre);
 						break;
 					}
+					if(pre.getUsedPos()==PatternConstants.POS_VERB && adnomiEomi.contains(pre.getEomi())) {
+						tempVerbList.add(pre);
+						break;
+					}
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 						tempNounList.add(pre);
 					} 
@@ -394,6 +425,16 @@ public class PostProcessUtil {
 	private static void busaCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList,
 			List<AnalysisOutput> nextList, List<List<AnalysisOutput>> outList, int index) {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
+		if(foreAnal.getUsedPosType()=='c') {
+			for(AnalysisOutput pre : preList) {
+				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+					tempList.add(pre);
+					outList.remove(index);
+					outList.add(index, removeSame(tempList));
+					return;
+				}
+			}
+		}
 		for(AnalysisOutput ne : nextList) {
 			if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
 				for(AnalysisOutput pre : preList) {
@@ -555,6 +596,11 @@ public class PostProcessUtil {
 					if(!"보".equals(temp.getStem())) {
 						temp.setUsedPos(PatternConstants.POS_NOUN);
 					}	
+				}
+				if("는가에".equals(temp.getEomi())) {
+					temp.setUsedPos(PatternConstants.POS_NOUN);
+					temp.setJosa("에");
+					temp.setStem(temp.getSource().substring(0,temp.getSource().length()-1));
 				}
 			}
 		}

@@ -14,7 +14,7 @@ public class Main {
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
 		/*
 		BufferedReader br = 
-				new BufferedReader(new FileReader("C:\\Users\\Seungwoo\\PycharmProjects\\postProcessAbstract\\edit\\abstract0.txt"));
+				new BufferedReader(new FileReader("C:\\Users\\Seungwoo\\PycharmProjects\\postProcessAbstract\\edit\\abstract1.txt"));
 		while(true) {
 			String line = br.readLine();
 			if(line==null) break;
@@ -39,7 +39,7 @@ public class Main {
 		}
 		*/
 		
-		String input2 = "그러므로 본 연구는 우선, 사회적 배제와 포함에 대한 이론적 고찰로부터 각 개념과 구성요소, 특성, 유용성 및 제한성 등 기본적인 이해를 도모하고자 노력하였다.";
+		String input2 = "이런 상황과 더불어 지역의 보수적인 사회정치적 조건은 지역공동체가 전체적이고 갈등을 사회화하는 전략을 추진할 수 있는 집합적 행동의 여지를 거의 주지 않았다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
