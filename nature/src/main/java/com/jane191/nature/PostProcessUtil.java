@@ -54,7 +54,7 @@ public class PostProcessUtil {
 		String[] busae = new String[] {"도록", "게"}; //부사형 어미
 		String[] dej = new String[] {"이다", "이면", "이고", "이니", "이지"}; //서술격 조사
 		
-		String[] same = new String[] {"도움", "그림"}; // 같은 의미
+		String[] same = new String[] {"도움", "그림", "죽음"}; // 같은 의미
 		
 		addList(nomiJosa,nomis);
 		addList(objJosa,objs);
@@ -74,7 +74,11 @@ public class PostProcessUtil {
 				List<AnalysisOutput> preList = outList.get(i);
 				int count = 0;
 				for(AnalysisOutput pre : preList) {
-					if(pre.getUsedPosType() == '@') count += 1;
+					System.out.println(pre);
+					System.out.println(pre.getUsedPosType());
+					if(pre.getUsedPosType() == '@') {
+						count += 1;
+					}
 				}
 				if(count == preList.size()) {
 					List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
@@ -91,11 +95,11 @@ public class PostProcessUtil {
 	 * ex) VM vs NJ의 경우 index-1이 N이면 VM으로 판단, V이면 NJ로 판단 함.
 	 */
 	public static void selectResults(List<List<AnalysisOutput>> outList, int index) {
+		List<AnalysisOutput> preList = outList.get(index);
 		AnalysisOutput foreAnal = new AnalysisOutput();
 		List<AnalysisOutput> nextList = new ArrayList<AnalysisOutput>();
+		System.out.println(outList.get(index));
 		if(index > 0) {
-			System.out.println(outList.get(index-1));
-			System.out.println(outList.get(index).get(0));
 			foreAnal = outList.get(index-1).get(0);
 		}
 		if(index < outList.size()-1) {
@@ -117,12 +121,16 @@ public class PostProcessUtil {
 				foreAnal.setScore(AnalysisOutput.SCORE_FAIL); //실패 스코어로 변경
 			}
 		}*/
-		List<AnalysisOutput> preList = outList.get(index);
 		if(sameMeaning(preList) != 0) {
 			if(sameMeaning(preList) == 1) {
-				preList.remove(0);
+				List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
+				for(AnalysisOutput pre : preList) {
+					if(sameMean.contains(pre.getStem())) {
+						tempList.add(pre);
+					}
+				}
 				outList.remove(index);
-				outList.add(index, preList);
+				outList.add(index, tempList);
 			} else {
 				preList.remove(1);
 				outList.remove(index);
@@ -174,8 +182,8 @@ public class PostProcessUtil {
 			List<List<AnalysisOutput>> outList, int index) {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
 		//조사가 존재하고, 그 조사가 주격 조사나 서술격 조사가 아닐때
-		if(foreAnal.getJosa()!=null 
-				&& !(nomiJosa.contains(foreAnal.getJosa())||deJosa.contains(foreAnal.getJosa())||conJosa.contains(foreAnal.getJosa()))) {
+		if(foreAnal.getJosa()!=null && !(nomiJosa.contains(foreAnal.getJosa())||deJosa.contains(foreAnal.getJosa())||
+				conJosa.contains(foreAnal.getJosa())||busaJosa.contains(foreAnal.getJosa()))) {
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
@@ -218,7 +226,8 @@ public class PostProcessUtil {
 			// 2번에선 '-는'이 관형사형 어미로서 알다가 관형어로 쓰여서 '지식은'을 수식. 이런 케이스들을 고려해야할 듯
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
-						(!deJosa.contains(pre.getJosa())&&!objJosa.contains(pre.getJosa())&&pre.getPatn()!=PatternConstants.PTN_N)) {
+						(!deJosa.contains(pre.getJosa())&&!objJosa.contains(pre.getJosa())&&
+								!busaJosa.contains(pre.getJosa())&&!"의".equals(pre.getJosa())&&pre.getPatn()!=PatternConstants.PTN_N)) {
 					tempList.add(pre);
 				} else if(pre.getEomi()!=null) {
 					if(index != outList.size()-1) {
@@ -250,7 +259,7 @@ public class PostProcessUtil {
 			outList.remove(index);
 			outList.add(index, preList);
 		} else if(conJosa.contains(foreAnal.getJosa())) {
-			// 연결 조사일때 
+			// 연결 조사일때  (격조사로서의 "와", "과" 체크 해야함)
 			for(AnalysisOutput pre : preList) {
 				if("함께".equals(pre.getStem()) && pre.getUsedPos()==PatternConstants.POS_AID) {
 					tempList.add(pre);
@@ -262,6 +271,9 @@ public class PostProcessUtil {
 			}
 			outList.remove(index);
 			outList.add(index, removeSame(tempList));
+		} else if(busaJosa.contains(foreAnal.getJosa())) {
+			//부사격 조사일때
+			
 		} else if(foreAnal.getEomi()!=null) {
 			//-기 어미에 의해서 명사형으로 취급될때
 			for(AnalysisOutput pre : preList) {
@@ -425,15 +437,15 @@ public class PostProcessUtil {
 	private static void busaCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList,
 			List<AnalysisOutput> nextList, List<List<AnalysisOutput>> outList, int index) {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
-		if(foreAnal.getUsedPosType()=='c') {
+		if(foreAnal.getUsedPosType()=='c'||foreAnal.getUsedPosType()=='d') { //접속 부사 혹은 지시 관형사
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
-					outList.remove(index);
-					outList.add(index, removeSame(tempList));
-					return;
 				}
 			}
+			outList.remove(index);
+			outList.add(index, removeSame(tempList));
+			return;
 		}
 		for(AnalysisOutput ne : nextList) {
 			if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
@@ -462,8 +474,8 @@ public class PostProcessUtil {
 				for(AnalysisOutput pre : preList) {
 					//현재가 관형사일때
 					if((pre.getUsedPos()==PatternConstants.POS_AID&&
-							(pre.getUsedPosType()=='d'||pre.getUsedPosType()=='n'||pre.getUsedPosType()=='p')||pre.getUsedPosType()=='1')
-							||"의".equals(pre.getJosa())) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외 //postype 미 완료로 1 추가
+							(pre.getUsedPosType()=='d'||pre.getUsedPosType()=='n'||pre.getUsedPosType()=='p'||pre.getUsedPosType()=='1')
+							||"의".equals(pre.getJosa()))) { //(adnomiEomi.contains(pre.getEomi()) 판단 부분 제외 //postype 미 완료로 1 추가
 						tempList.add(pre);
 					//현재가 접속부사일때
 					} else if(pre.getUsedPosType()=='c'&&pre.getUsedPos()==PatternConstants.POS_AID) {
@@ -488,6 +500,13 @@ public class PostProcessUtil {
 					for(AnalysisOutput pre : preList) {
 						if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
 								(pre.getJosa().equals("을")||pre.getJosa().equals("를"))) {
+							tempList.add(pre);
+						}
+					}
+				} else if(ne.getStem().equals("관련")||ne.getStem().equals("관하")||ne.getStem().equals("대하")) {
+					for(AnalysisOutput pre : preList) {
+						if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
+								("와".equals(pre.getJosa())||"에".equals(pre.getJosa())||"과".equals(pre.getJosa()))) {
 							tempList.add(pre);
 						}
 					}
@@ -589,7 +608,7 @@ public class PostProcessUtil {
 	 -기 어미에 의해서 명사형인 토큰을 찾아서 UsedPos 변경 N으로 변경
 	 (morphAnalyzer에서 변경 가능하면 그 쪽에서 하는게 이득일듯)
 	 */
-	public static List<List<AnalysisOutput>> nounEomi(List<List<AnalysisOutput>> list) {
+	public static void nounEomi(List<List<AnalysisOutput>> list) {
 		for(List<AnalysisOutput> tempList : list) {
 			for(AnalysisOutput temp : tempList) {
 				if("기".equals(temp.getEomi())) {
@@ -604,7 +623,6 @@ public class PostProcessUtil {
 				}
 			}
 		}
-		return list;
 	}
 	
 	/**
