@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.lucene.analysis.ko.morph.AnalysisOutput;
+import org.apache.lucene.analysis.ko.morph.MorphException;
 import org.apache.lucene.analysis.ko.morph.PatternConstants;
 import org.apache.lucene.analysis.ko.morph.WordEntry;
 import org.apache.lucene.analysis.ko.utils.DictionaryUtil;
@@ -43,7 +44,7 @@ public class PostProcessUtil {
 	private static final HashSet<String> sameMean = new HashSet<String>();
 	
 	static {
-		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만","으로는"}; //주격 조사
+		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
 		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
 		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다","니라","다"}; //종결 어미
 		String[] cone = new String[] {"고","며","으며","면서","어서"}; //연결 어미
@@ -67,9 +68,15 @@ public class PostProcessUtil {
 		addList(deJosa, dej);
 		addList(sameMean, same);
 	};
-	
-	public static void noDicCase(List<List<AnalysisOutput>> outList) {
+	/**
+	 * 사전에 없는 경우, 없는 단어 + 조사(어미)의 형태만 출력하게 하기 위한 함수</br>
+	 * complexJE를 포함시킴
+	 * @param outList
+	 * @throws MorphException 
+	 */
+	public static void noDicCase(List<List<AnalysisOutput>> outList) throws MorphException {
 		for(int i=0; i<outList.size(); i++) {
+			complexJE(outList.get(i));
 			if(outList.get(i).size()>1) {
 				List<AnalysisOutput> preList = outList.get(i);
 				int count = 0;
@@ -87,17 +94,18 @@ public class PostProcessUtil {
 		}
 	}
 	/**
-	 * index-1 & index+1의 결과값을 보고 index의 결과값을 결정
+	 * index-1 & index+1의 결과값을 보고 index의 결과값을 결정</br>
 	 * ex) VM vs NJ의 경우 index-1이 N이면 VM으로 판단, V이면 NJ로 판단 함.
+	 * @param outList
+	 * @param index
 	 */
 	public static void selectResults(List<List<AnalysisOutput>> outList, int index) {
 		List<AnalysisOutput> preList = outList.get(index);
 		AnalysisOutput foreAnal = new AnalysisOutput();
 		List<AnalysisOutput> nextList = new ArrayList<AnalysisOutput>();
-		System.out.println(outList.get(index));
+		//System.out.println(outList.get(index));
 		if(index > 0) {
 			foreAnal = outList.get(index-1).get(0);
-			System.out.println(foreAnal);
 		}
 		if(index < outList.size()-1) {
 			nextList = outList.get(index+1);
@@ -174,7 +182,14 @@ public class PostProcessUtil {
 		}
 	}
 	
-	//앞의 토큰이 명사 사용일때
+	/**
+	 * 앞의 토큰이 명사형 일 때
+	 * @param foreAnal
+	 * @param preList
+	 * @param nextList
+	 * @param outList
+	 * @param index
+	 */
 	private static void nounCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList, List<AnalysisOutput> nextList,
 			List<List<AnalysisOutput>> outList, int index) {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
@@ -184,15 +199,31 @@ public class PostProcessUtil {
 			if("의".equals(foreAnal.getJosa())||"들의".equals(foreAnal.getJosa())) {
 				for(AnalysisOutput ne : nextList) {
 					if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
-						for(AnalysisOutput pre : preList) {
-							if(pre.getUsedPos()==PatternConstants.POS_VERB) {
-								tempList.add(pre);
-							} else if(pre.getUsedPos()==PatternConstants.POS_NOUN && pre.getPatn()==PatternConstants.PTN_N) {
-								if(ne.getPatn()==PatternConstants.PTN_N) {
+						if(objJosa.contains(ne.getJosa())) {
+							for(AnalysisOutput pre : preList) {
+								if("의".equals(pre.getJosa())||"들의".equals(pre.getJosa())) {
+									tempList.add(pre);
+								} else {
+									if(adnomiEomi.contains(pre.getEomi())) {
+										tempList.add(pre);
+									}
+								}
+							}
+							
+						} else {
+							for(AnalysisOutput pre : preList) {
+								if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+									tempList.add(pre);
+								} else if(pre.getUsedPos()==PatternConstants.POS_NOUN && pre.getPatn()==PatternConstants.PTN_N) {
+									if(ne.getPatn()==PatternConstants.PTN_N) {
+										tempList.add(pre);
+									}
+								} else if(pre.getUsedPos()==PatternConstants.POS_NOUN && objJosa.contains(pre.getJosa())) {
 									tempList.add(pre);
 								}
 							}
 						}
+						
 					} else if(ne.getUsedPos()==PatternConstants.POS_VERB) {
 						for(AnalysisOutput pre : preList) {
 							if(pre.getUsedPos()==PatternConstants.POS_NOUN || pre.getUsedPos()==PatternConstants.POS_AID) {
@@ -219,6 +250,7 @@ public class PostProcessUtil {
 					if(foreAnal.getUsedPosType()=='d' && objJosa.contains(foreAnal.getJosa())) {
 						if(pre.getPatn()==PatternConstants.PTN_N) continue;
 					}
+					if("토대".equals(pre.getStem())) continue;
 					tempList.add(pre);
 				}
 			}
@@ -227,6 +259,7 @@ public class PostProcessUtil {
 			}
 			tempList.clear();
 			//tempList의 명사 제거 목적은 완료, 밑에서는 결과값 임시 저장을 위해서 사용.
+			/*
 			if(preList.size()>1) {
 				boolean detBusa = false;
 				for(AnalysisOutput ne : nextList) {
@@ -249,6 +282,8 @@ public class PostProcessUtil {
 				if(detBusa) tempList = tempBusaList;
 				else tempList = tempVerbList;
 			} else tempList = preList;
+			*/
+			tempList = preList;
 			outList.remove(index);
 			outList.add(index, removeSame(tempList));
 		} else if(nomiJosa.contains(foreAnal.getJosa())) { 
@@ -365,7 +400,14 @@ public class PostProcessUtil {
 			outList.add(index, tempList);
 		}
 	}
-	
+	/**
+	 * 앞의 토큰이 동사형 일 때 
+	 * @param foreAnal
+	 * @param preList
+	 * @param nextList
+	 * @param outList
+	 * @param index
+	 */
 	private static void verbCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList,
 			List<AnalysisOutput> nextList, List<List<AnalysisOutput>>outList, int index) {
 		if(foreAnal.getEomi()!=null) {
@@ -636,7 +678,7 @@ public class PostProcessUtil {
 		return 0;
 	}
 	/**
-	 * Analysis Score 80점 이상만 고려하기 위해서
+	 * Analysis Score 80점 이상만 고려하기 위해서</br>
 	 * 만약 결과값이 다 80점 아래라면 그대로 출력
 	 */
 	public static List<List<AnalysisOutput>> scoreSelect(List<List<AnalysisOutput>> result) {
@@ -656,7 +698,7 @@ public class PostProcessUtil {
 		return outList;
 	}
 	/**
-	 -기 어미에 의해서 명사형인 토큰을 찾아서 UsedPos 변경 N으로 변경
+	 -기 어미에 의해서 명사형인 토큰을 찾아서 UsedPos 변경 N으로 변경</br>
 	 (morphAnalyzer에서 변경 가능하면 그 쪽에서 하는게 이득일듯)
 	 */
 	public static void nounEomi(List<List<AnalysisOutput>> list) {
@@ -678,7 +720,7 @@ public class PostProcessUtil {
 	}
 	
 	/**
-	 -히로 끝나는 일반 부사형은 -히의 어간에 따라 속성값이 정해짐
+	 -히로 끝나는 일반 부사형은 -히의 어간에 따라 속성값이 정해짐</br>
 	 (N(혹은 V,Z)+히 형태로 변경)
 	 */
 	public static AnalysisOutput hiCase(AnalysisOutput anal) {
@@ -710,5 +752,60 @@ public class PostProcessUtil {
 				} else return anal;
 			}
 		} else return anal;
+	}
+	/**
+	 * 조사+(주격, 목적격)조사나 어미+(주격, 목적격)조사에 해당하는 경우</br>
+	 * 주격, 목적격 조사를 분리하여 처리해야할 필요성이 있음
+	 * @param preList
+	 * @throws MorphException 
+	 */
+	public static void complexJE(List<AnalysisOutput> preList) throws MorphException {
+		for(AnalysisOutput pre : preList) {
+			if(pre.getJosa() != null) {
+				if(nomiJosa.contains(pre.getJosa().substring(pre.getJosa().length()-1))) {
+					String tempJosa = pre.getJosa().substring(0, pre.getJosa().length()-1);
+					if(DictionaryUtil.existJosa(tempJosa)) {
+						pre.setPatn(PatternConstants.PTN_NJ);
+						pre.setStem(pre.getSource().substring(0, pre.getSource().length()-1));
+						pre.setJosa(pre.getSource().substring(pre.getSource().length()-1));
+						pre.setUsedPosType('@');
+					}
+				} else if(objJosa.contains(pre.getJosa().substring(pre.getJosa().length()-1))) {
+					String tempJosa = pre.getJosa().substring(0, pre.getJosa().length()-1);
+					if(DictionaryUtil.existJosa(tempJosa)) {
+						pre.setPatn(PatternConstants.PTN_NJ);
+						pre.setStem(pre.getSource().substring(0, pre.getSource().length()-1));
+						pre.setJosa(pre.getSource().substring(pre.getSource().length()-1));
+						pre.setUsedPosType('@');
+					}
+				}
+			} else if(pre.getEomi() != null) {
+				if(nomiJosa.contains(pre.getEomi().substring(pre.getEomi().length()-1))) {
+					String tempEomi = pre.getEomi().substring(0, pre.getEomi().length()-1);
+					if(tempEomi.startsWith("ㄴ")) {
+						tempEomi = "는"+tempEomi.substring(tempEomi.length()-1);
+					}
+					if(DictionaryUtil.existEomi(tempEomi)) {
+						pre.setPatn(PatternConstants.PTN_NJ);
+						pre.setUsedPos(PatternConstants.POS_NOUN);
+						pre.setStem(pre.getSource().substring(0, pre.getSource().length()-1));
+						pre.setJosa(pre.getSource().substring(pre.getSource().length()-1));
+						pre.setUsedPosType('@');
+					}
+				} else if(objJosa.contains(pre.getEomi().substring(pre.getEomi().length()-1))) {
+					String tempEomi = pre.getEomi().substring(0, pre.getEomi().length()-1);
+					if(tempEomi.startsWith("ㄴ")) {
+						tempEomi = "는"+tempEomi.substring(tempEomi.length()-1);
+					}
+					if(DictionaryUtil.existEomi(tempEomi)) {
+						pre.setPatn(PatternConstants.PTN_NJ);
+						pre.setUsedPos(PatternConstants.POS_NOUN);
+						pre.setStem(pre.getSource().substring(0, pre.getSource().length()-1));
+						pre.setJosa(pre.getSource().substring(pre.getSource().length()-1));
+						pre.setUsedPosType('@');
+					}
+				}
+			}
+		}
 	}
 }
