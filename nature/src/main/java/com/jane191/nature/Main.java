@@ -14,7 +14,7 @@ public class Main {
 		ArirangAnalyzerHandler aah = new ArirangAnalyzerHandler();
 		/*
 		BufferedReader br = 
-				new BufferedReader(new FileReader("C:\\Users\\Seungwoo\\PycharmProjects\\postProcessAbstract\\edit\\abstract3.txt"));
+				new BufferedReader(new FileReader("C:\\Users\\Seungwoo\\PycharmProjects\\postProcessAbstract\\edit\\abstract0.txt"));
 		while(true) {
 			String line = br.readLine();
 			if(line==null) break;
@@ -40,7 +40,7 @@ public class Main {
 		}
 		*/
 		
-		String input2 = "그 결과 첫째, 사회참여와 주관적 건강의 초기값과의 상관은 사회참여의 종류에 따라 달라짐을 확인하였다.";
+		String input2 = "첫째, 지역사회의 발전의 추진주체는 지역의 사회단체의 활성화를 위해 그리고 그 단체에 대한 시민들의 참여를 위해 적극 지원을 제공해야 할 것이다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {

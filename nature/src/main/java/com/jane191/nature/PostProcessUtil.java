@@ -23,8 +23,8 @@ public class PostProcessUtil {
 	/** 연결 어미 :
 	 * "고","며","으며","면서","어서"*/
 	private static final HashSet<String> conEomi = new HashSet<String>();
-	/** 연결 조사 :
-	 * "과", "와"*/
+	/** 접속 조사 :
+	 * "과", "와", "이나", "나"*/
 	private static final HashSet<String> conJosa = new HashSet<String>();
 	/** 관형사형 어미 :
 	 * "는","은","ㄴ","을","ㄹ","던"*/
@@ -43,12 +43,12 @@ public class PostProcessUtil {
 	private static final HashSet<String> sameMean = new HashSet<String>();
 	
 	static {
-		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만"}; //주격 조사
+		String[] nomis = new String[] {"이","가","께서","에서","은","는","도","만","으로는"}; //주격 조사
 		String[] objs = new String[] {"을","를","은","는","도","만"}; //목적격 조사
 		String[] ends = new String[] {"ㄴ다","는다","ㅂ니다","습니다","니라","다"}; //종결 어미
 		String[] cone = new String[] {"고","며","으며","면서","어서"}; //연결 어미
-		String[] conj = new String[] {"과", "와"}; //연결 조사
-		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던"}; //관형사형 어미
+		String[] conj = new String[] {"과", "와", "이나", "나"}; //접속 조사
+		String[] adnomis = new String[] {"는","은","ㄴ","을","ㄹ","던","어는"}; //관형사형 어미
 		//관형사형 어미를 체크하는게 필요없을 가능성이 보임.
 		String[] busaj = new String[] {"에","에서","에게","와","과","으로","로","보다"}; //부사격 조사
 		String[] busae = new String[] {"도록", "게"}; //부사형 어미
@@ -97,13 +97,14 @@ public class PostProcessUtil {
 		System.out.println(outList.get(index));
 		if(index > 0) {
 			foreAnal = outList.get(index-1).get(0);
+			System.out.println(foreAnal);
 		}
 		if(index < outList.size()-1) {
 			nextList = outList.get(index+1);
 		}
 		//관형사 체크를 위한 어미, 관형사형 조사는 "의" 밖에 없으므로 따로
 		if(foreAnal.getJosa()!=null&&(foreAnal.getJosa().equals("의")||foreAnal.getJosa().equals("들의"))) {
-			if(index>1) foreAnal = outList.get(index-2).get(0);
+			if(index>1) foreAnal = outList.get(index-1).get(0);
 			else {
 				foreAnal.setUsedPos('A');
 				foreAnal.setScore(AnalysisOutput.SCORE_FAIL);
@@ -177,17 +178,54 @@ public class PostProcessUtil {
 	private static void nounCase(AnalysisOutput foreAnal, List<AnalysisOutput> preList, List<AnalysisOutput> nextList,
 			List<List<AnalysisOutput>> outList, int index) {
 		List<AnalysisOutput> tempList = new ArrayList<AnalysisOutput>();
-		//조사가 존재하고, 그 조사가 주격 조사나 서술격 조사가 아닐때
+		//조사가 존재하고, 그 조사가 주격 조사, 서술격 조사, 연결 조사, 부사격 조사가 아닐때
 		if(foreAnal.getJosa()!=null && !(nomiJosa.contains(foreAnal.getJosa())||deJosa.contains(foreAnal.getJosa())||
 				conJosa.contains(foreAnal.getJosa())||busaJosa.contains(foreAnal.getJosa()))) {
+			if("의".equals(foreAnal.getJosa())||"들의".equals(foreAnal.getJosa())) {
+				for(AnalysisOutput ne : nextList) {
+					if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+								tempList.add(pre);
+							} else if(pre.getUsedPos()==PatternConstants.POS_NOUN && pre.getPatn()==PatternConstants.PTN_N) {
+								if(ne.getPatn()==PatternConstants.PTN_N) {
+									tempList.add(pre);
+								}
+							}
+						}
+					} else if(ne.getUsedPos()==PatternConstants.POS_VERB) {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getUsedPos()==PatternConstants.POS_NOUN || pre.getUsedPos()==PatternConstants.POS_AID) {
+								tempList.add(pre);
+							}
+						}
+					} else {
+						for(AnalysisOutput pre : preList) {
+							if(pre.getUsedPos()==PatternConstants.POS_VERB) {
+								tempList.add(pre);
+							}
+						}
+					}
+				}
+				if(tempList.size() != 0) {
+					outList.remove(index);
+					outList.add(index, removeSame(tempList));
+					return;
+				}
+				
+			}
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+					if(foreAnal.getUsedPosType()=='d' && objJosa.contains(foreAnal.getJosa())) {
+						if(pre.getPatn()==PatternConstants.PTN_N) continue;
+					}
 					tempList.add(pre);
 				}
 			}
 			for(AnalysisOutput temp : tempList) {
 				preList.remove(temp);
 			}
+			tempList.clear();
 			//tempList의 명사 제거 목적은 완료, 밑에서는 결과값 임시 저장을 위해서 사용.
 			if(preList.size()>1) {
 				boolean detBusa = false;
@@ -261,12 +299,14 @@ public class PostProcessUtil {
 					tempList.add(pre);
 					break;
 				}
-				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
+				if(foreAnal.getUsedPosType()==pre.getUsedPosType() && pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
 				}
 			}
-			outList.remove(index);
-			outList.add(index, removeSame(tempList));
+			if(tempList.size()>0) {
+				outList.remove(index);
+				outList.add(index, removeSame(tempList));
+			}
 		} else if(busaJosa.contains(foreAnal.getJosa())) {
 			//부사격 조사일때
 			
@@ -307,8 +347,13 @@ public class PostProcessUtil {
 			for(AnalysisOutput pre : preList) {
 				if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 					tempList.add(pre);
-				}
-				if(pre.getUsedPos()==PatternConstants.POS_AID) {
+				} else if(pre.getUsedPos()==PatternConstants.POS_AID) {
+					for(AnalysisOutput ne : nextList) {
+						if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
+							tempList.add(pre);
+						}
+					}
+				} else { //임시 버전
 					for(AnalysisOutput ne : nextList) {
 						if(ne.getUsedPos()==PatternConstants.POS_NOUN) {
 							tempList.add(pre);
@@ -413,14 +458,19 @@ public class PostProcessUtil {
 					if(pre.getUsedPos()==PatternConstants.POS_VERB && pre.getUsedPosType()=='b') {
 						tempVerbList.add(pre);
 						break;
-					}
-					if(pre.getUsedPos()==PatternConstants.POS_VERB && adnomiEomi.contains(pre.getEomi())) {
-						tempVerbList.add(pre);
-						break;
+					} else if(pre.getUsedPos()==PatternConstants.POS_VERB && adnomiEomi.contains(pre.getEomi())) {
+						for(AnalysisOutput ne : nextList) {
+							if(ne.getUsedPos()==PatternConstants.POS_VERB && !adnomiEomi.contains(ne.getEomi())) {
+								tempVerbList.add(pre);
+								break;
+							}
+						}
 					}
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 						tempNounList.add(pre);
-					} 
+					} else if(pre.getUsedPos()==PatternConstants.POS_AID && pre.getUsedPosType()=='c') {
+						tempVerbList.add(pre);
+					}
 				}
 			}
 			//어떤 List를 선택해야 하는 것에 대한 건 고민이 필요함
@@ -483,6 +533,9 @@ public class PostProcessUtil {
 					} else if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
 							nomiJosa.contains(pre.getJosa())) {
 						tempList.add(pre);
+					} else if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
+							objJosa.contains(pre.getJosa())) {
+						tempList.add(pre);
 					}
 				}
 			} else if(ne.getUsedPos()==PatternConstants.POS_AID) {
@@ -500,10 +553,11 @@ public class PostProcessUtil {
 						}
 					}
 				} else if(ne.getStem().equals("관련")||ne.getStem().equals("관하")||
-						ne.getStem().equals("대하")||ne.getStem().equals("맞물리")) {
+						ne.getStem().equals("대하")||ne.getStem().equals("맞물리")||ne.getStem().equals("달")) {
 					for(AnalysisOutput pre : preList) {
 						if(pre.getUsedPos()==PatternConstants.POS_NOUN && 
-								("와".equals(pre.getJosa())||"에".equals(pre.getJosa())||"과".equals(pre.getJosa()))) {
+								("와".equals(pre.getJosa())||"에".equals(pre.getJosa())||
+										"과".equals(pre.getJosa())||"와는".equals(pre.getJosa()))) {
 							tempList.add(pre);
 						}
 					}
@@ -613,10 +667,11 @@ public class PostProcessUtil {
 						temp.setUsedPos(PatternConstants.POS_NOUN);
 					}	
 				}
-				if("는가에".equals(temp.getEomi())) {
+				if("는가에".equals(temp.getEomi())||"느냐에".equals(temp.getEomi())) {
 					temp.setUsedPos(PatternConstants.POS_NOUN);
 					temp.setJosa("에");
 					temp.setStem(temp.getSource().substring(0,temp.getSource().length()-1));
+					temp.setPatn(PatternConstants.PTN_NJ);
 				}
 			}
 		}
