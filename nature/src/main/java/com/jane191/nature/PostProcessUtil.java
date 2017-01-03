@@ -584,6 +584,8 @@ public class PostProcessUtil {
 				for(AnalysisOutput pre : preList) {
 					if(pre.getUsedPos()==PatternConstants.POS_NOUN) {
 						tempList.add(pre);
+					} else if(pre.getUsedPos()==PatternConstants.POS_AID && pre.getUsedPosType()=='c') {
+						tempList.add(pre);
 					}
 				}
 			} else if(ne.getUsedPos()==PatternConstants.POS_VERB) {
