@@ -40,7 +40,7 @@ public class Main {
 		}
 		
 		
-		String input2 = "경험적 분석의 결과 도움을 받을 이웃이 많고, 주변에 소통할 사람이 있으며, 일인가구가 아닌 경우 삶의 만족이 높은 반면, 자신의 객관적 소득계층에 비해 스스로를 낮게 평가하거나 다른 사람들로부터 무시당하거나 인정을 받지 못한 경험이 있으면 삶의 만족이 낮았다.";
+		String input2 = "개신거리며 아버지를 따라가고 있었다.";
 		String input1 = "나에게 그 책의 의미는 '단순한 지식'이 아니라 '삶의 지혜'이다.";
 		StringTokenizer token = new StringTokenizer(input2,".");
 		while(token.hasMoreTokens()) {
@@ -75,6 +75,12 @@ public class Main {
 				}
 			}
 			System.out.println("실험"+result);
+			for(List<AnalysisOutput> list : result) {
+				for(AnalysisOutput anal : list) {
+					System.out.println(anal.getUsedPos());
+					System.out.println(anal);
+				}
+			}
 		}
 		
 		//String token = "'사람";
@@ -84,8 +90,8 @@ public class Main {
 	private static boolean differType(List<AnalysisOutput> preList) {
 		int count = 1;
 		char type = preList.get(0).getUsedPos();
-		for(int j = 1;j<preList.size(); j++) {
-			if(type==preList.get(j).getUsedPos()) {
+		for(int i = 1;i<preList.size(); i++) {
+			if(type==preList.get(i).getUsedPos()) {
 				count += 1;
 			}
 		}
